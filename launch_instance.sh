@@ -61,7 +61,7 @@ for port in 22 7474 7473 7687; do
   # aws ec2 authorize-security-group-ingress --group-name $GROUP --protocol tcp --port $port --cidr 0.0.0.0/0
 
   #  instead, restrict traffic to just MY_IP address!!
-  aws ec2 authorize-security-group-ingress --group-name $GROUP --protocol tcp --port $port --ip $MY_IP/32
+  aws ec2 authorize-security-group-ingress --group-name $GROUP --protocol tcp --port $port --cidr $MY_IP/32
 done
 
 # Locate images published by neo4j
@@ -93,7 +93,7 @@ aws ec2 describe-instances \
 # Next we login to our new instance by ssh
 # NOTE: for added security we can use SSH Tunneling and port forwarding
 # https://www.ssh.com/ssh/tunneling/
-# ssh -i $KEY_NAME.pem ubuntu@[PublicDnsName]
+ssh -i $KEY_NAME.pem ubuntu@[PublicDnsName]
 
 
 # login with browser to http://localhost:7474/browser/

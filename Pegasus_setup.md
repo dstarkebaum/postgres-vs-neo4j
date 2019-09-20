@@ -1,13 +1,13 @@
 # Setting up Pegasus
 
-Hopefully you have already completed the "19C AWS Insight Account Setup"
+Hopefully you have already completed the "19C AWS Insight Account Setup.pdf"
 Specifically, you have created your own IAM User.
 You will need the CSV file containing your AWS Access Keys for that IAM User
 
 ### Setting Envinronment variables:
-In the Terminal, open up your .bashrc file
+In the Terminal, open up your `.bashrc` file
 ```
-nano .bashrc
+nano ~/.bashrc
 ```
 scroll down to the bottom, and add the following lines:
 
@@ -22,15 +22,15 @@ export PATH=$PEGASUS_HOME:$PATH
 ```
 
 
-Note: While you are here in your .bashrc, I recommend the following changes:
-Look for the variable HISTSIZE, and set it to some very large number
+Note: While you are here in your `.bashrc`, I recommend the following changes:
+Look for the variable `HISTSIZE`, and set it to some very large number
 ```
 HISTSIZE=10000 (or -1 for infinite)
 HISTFILESIZE=20000 (or -1 for infinite)
 ```
 This will keep track of all commands that you enter into your terminal.
-HISTSIZE refers to the log you can access by typing "history" in the terminal.
-HISTFILESIZE refers to your ".bash_history" file.
+`HISTSIZE` refers to the log you can access by typing "history" in the terminal.
+`HISTFILESIZE` refers to your `.bash_history` file.
 This can be very useful to remember what you have done before!
 You can also re-enter previous commands py pressing the up key
 
