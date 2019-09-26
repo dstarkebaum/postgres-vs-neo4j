@@ -90,11 +90,12 @@ aws ec2 describe-instances \
   --query "Reservations[*].Instances[*].PublicDnsName" \
   --region us-west-2
 
+#aws ec2 describe-instances --query "Reservations[*].Instances[*].PublicDnsName" --region us-west-2
+
 # Next we login to our new instance by ssh
 # NOTE: for added security we can use SSH Tunneling and port forwarding
 # https://www.ssh.com/ssh/tunneling/
 ssh -i $KEY_NAME.pem ubuntu@[PublicDnsName]
-
 
 # login with browser to http://localhost:7474/browser/
 # default Neo4j password: ‘neo4j’
