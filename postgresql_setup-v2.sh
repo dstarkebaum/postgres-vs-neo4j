@@ -10,7 +10,7 @@
 sudo apt-get --yes update && sudo apt-get --yes upgrade
 
 # install general utilities
-sudo apt-get --yes install ssh rsync git supervisor bc
+sudo apt-get --yes install ssh rsync git supervisor bc awscli
 # install python tools
 sudo apt-get --yes install python3-dev python3-pip python3-numpy python3-scipy python3-pandas ipython3
 # install PostgreSQL (assuming version 10)
@@ -44,7 +44,9 @@ sudo sh -c 'printf "host\tall\t\tall\t\t10.0.0.0/28\t\tmd5\n" >> /etc/postgresql
 sudo sh -c 'printf "# Allow connections from Insight\n" >> /etc/postgresql/10/main/pg_hba.conf'
 sudo sh -c 'printf "host\tall\t\tall\t\t67.171.25.72/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
 # sudo nano /etc/postgresql/10/main/postgresql.conf
+sudo /etc/init.d/postgresql restart
 
+git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
 # NOTE: The default password will be set to the username (ubuntu)
 # but it is recommended that you setup your own
 # password after logging in for the first time with:
