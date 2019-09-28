@@ -68,7 +68,8 @@ def main():
     #conn = psycopg2.connect("dbname=postgres user=postgres")
 
     #TODO: Modify this to connect over network from one EC2 instance to another
-    conn = psycopg2.connect("host=localhost dbname=david user=david password=david")
+    #conn = psycopg2.connect("host=localhost dbname=david user=david password=david")
+    conn = psycopg2.connect("host=10.0.0.5 dbname=ubuntu user=ubuntu password=ubuntu")
     cursor = conn.cursor()
 
 
