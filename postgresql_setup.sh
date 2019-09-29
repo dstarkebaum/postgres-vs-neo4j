@@ -50,6 +50,8 @@ sudo sh -c 'printf "# Allow connections over AWS VPC within private subnet\n" >>
 sudo sh -c 'printf "host\tall\t\tall\t\t10.0.0.0/28\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
 sudo sh -c 'printf "# Allow connections from Insight\n" >> /etc/postgresql/10/main/pg_hba.conf'
 sudo sh -c 'printf "host\tall\t\tall\t\t67.171.25.72/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
+sudo sh -c 'printf "# Allow connections from Home\n" >> /etc/postgresql/10/main/pg_hba.conf'
+sudo sh -c 'printf "host\tall\t\tall\t\t73.225.252.191/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
 
 # You will also need to update postgreqql.conf to listen to the correct IP-addresses
 # The simplest way is to replace "localhost" with "*",
