@@ -16,13 +16,13 @@ function load_csv {
   #psql -h '10.0.0.5' -d ubuntu -U ubuntu -c \
   #psql -h 'localhost' -d david -U david -c "\copy ${1} (${2}) from $(pwd)/data/csv/${1}.csv with delimiter as '|'"
   echo "Copying $(pwd)/data/csv/${1}.csv into table(headers): ${1}(${2}) of database $USER at localhost"
-  psql -h 'localhost' -d $USER -U $USER -c "\copy ${1}(${2}) FROM $(pwd)/data/csv/${1}.csv WITH (FORMAT CSV, HEADER, DELIMITER '|')"
-  echo "Deleting duplicates in the authors table based on authors.id"
-  psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM authors a USING authors b WHERE a.ser < b.ser AND a.id = b.id"
-  echo "Deleting duplicates in the author_papers table"
-  psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM paper_authors a USING paper_authors b WHERE a.ser < b.ser AND a.paper_id = b.paper_id AND a.author_id = b.author_id"
-  echo "Transferring table $1 from local to main database at 10.0.0.9 (PostgreSQL server on private subnet)"
-  psql -h 'localhost' -d $USER -U $USER -c "\copy ${1} TO stdout" | psql -h 10.0.0.9 -U ubuntu ubuntu -c "\copy ${1} from stdin"
+  psql -h '10.0.0.9' -d $USER -U $USER -c "\copy ${1}(${2}) FROM $(pwd)/data/csv/${1}.csv WITH (FORMAT CSV, HEADER, DELIMITER '|')"
+  #echo "Deleting duplicates in the authors table based on authors.id"
+  #psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM authors a USING authors b WHERE a.ser < b.ser AND a.id = b.id"
+  #echo "Deleting duplicates in the author_papers table"
+  #psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM paper_authors a USING paper_authors b WHERE a.ser < b.ser AND a.paper_id = b.paper_id AND a.author_id = b.author_id"
+  #echo "Transferring table $1 from local to main database at 10.0.0.9 (PostgreSQL server on private subnet)"
+  #psql -h 'localhost' -d $USER -U $USER -c "\copy ${1} TO stdout" | psql -h 10.0.0.9 -U ubuntu ubuntu -c "\copy ${1} from stdin"
 }
 #users (id, email, first_name, last_name)
 
@@ -34,6 +34,7 @@ do
   load_csv "outCits" "id, outCit_id"
   load_csv "authors" "id, name"
   load_csv "paper_authors" "paper_id, author_id"
+  echo "clearing data folder"
   rm -r data/*
 done
 
