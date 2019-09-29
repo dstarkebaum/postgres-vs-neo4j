@@ -21,20 +21,20 @@ function load_csv {
   psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM authors a USING authors b WHERE a.ser < b.ser AND a.id = b.id"
   echo "Deleting duplicates in the author_papers table"
   psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM paper_authors a USING paper_authors b WHERE a.ser < b.ser AND a.paper_id = b.paper_id AND a.author_id = b.author_id"
-  echo "Transferring table $1 from local to main database at 54.201.248.140"
-  psql -h 'localhost' -d $USER -U $USER -c "\copy ${1} TO stdout" | psql -h 54.201.248.140 -U ubuntu ubuntu -c "\copy ${1} from stdin"
+  echo "Transferring table $1 from local to main database at 10.0.0.9 (PostgreSQL server on private subnet)"
+  psql -h 'localhost' -d $USER -U $USER -c "\copy ${1} TO stdout" | psql -h 10.0.0.9 -U ubuntu ubuntu -c "\copy ${1} from stdin"
 }
 #users (id, email, first_name, last_name)
 
-for i in {001..001}
+for i in {000..000}
 do
   make_csv "s2-corpus-$i"
-  #load_csv "papers" "id, title, year, doi"
-  #load_csv "inCits" "id, inCit_id"
-  #load_csv "outCits" "id, outCit_id"
-  #load_csv "authors" "id, name"
-  #load_csv "paper_authors" "paper_id, author_id"
-  #rm -r data/*
+  load_csv "papers" "id, title, year, doi"
+  load_csv "inCits" "id, inCit_id"
+  load_csv "outCits" "id, outCit_id"
+  load_csv "authors" "id, name"
+  load_csv "paper_authors" "paper_id, author_id"
+  rm -r data/*
 done
 
 #papers_csv = r"data/csv/papers.csv"
