@@ -27,7 +27,7 @@ function load_csv {
 }
 #users (id, email, first_name, last_name)
 
-for i in {001..176}
+for i in {000..176}
 do
   make_csv "s2-corpus-$i"
   load_csv "papers" "id, title, year, doi"
