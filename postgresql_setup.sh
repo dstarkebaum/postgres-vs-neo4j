@@ -10,11 +10,28 @@
 sudo apt-get --yes update && sudo apt-get --yes upgrade
 
 # install general utilities
-sudo apt-get --yes install ssh rsync git supervisor bc awscli
+sudo apt-get --yes install \
+ssh=1:7.6p1-4ubuntu0.3 \
+rsync=3.1.2-2.1ubuntu1 \
+git=1:2.17.1-1ubuntu0.4 \
+supervisor=3.3.1-1.1 \
+bc=1.07.1-2 \
+awscli=1.14.44-1ubuntu1
+
 # install python tools
-sudo apt-get --yes install python3-dev python3-pip python3-numpy python3-scipy python3-pandas ipython3
+sudo apt-get --yes install \
+  python3-dev=3.6.7-1~18.04 \
+  python3-pip=9.0.1-2.3~ubuntu1.18.04.1 \
+  python3-numpy=1:1.13.3-2ubuntu1 \
+  python3-scipy=0.19.1-2ubuntu1 \
+  python3-pandas=0.22.0-4 \
+  ipython3=5.5.0-1
+
 # install PostgreSQL (assuming version 10)
-sudo apt-get --yes install postgresql postgresql-server-dev-10 libpq-dev
+sudo apt-get --yes install \
+  postgresql=10+190 \
+  postgresql-server-dev-10=10.10-0ubuntu0.18.04.1 \
+  libpq-dev=10.10-0ubuntu0.18.04.1
 
 # install python packages
 pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
@@ -46,22 +63,25 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $USER TO $USER;"
 # sudo nano /etc/postgresql/10/main/pg_hba.conf
 # or automatically using bash piping!
 # --> Start a terminal as root, printf a string and append-pipe it to the config file:
-sudo sh -c 'printf "# Allow connections over AWS VPC within private subnet\n" >> /etc/postgresql/10/main/pg_hba.conf'
-sudo sh -c 'printf "host\tall\t\tall\t\t10.0.0.0/28\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
-sudo sh -c 'printf "# Allow connections from Insight\n" >> /etc/postgresql/10/main/pg_hba.conf'
-sudo sh -c 'printf "host\tall\t\tall\t\t67.171.25.72/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
-sudo sh -c 'printf "# Allow connections from Home\n" >> /etc/postgresql/10/main/pg_hba.conf'
-sudo sh -c 'printf "host\tall\t\tall\t\t73.225.252.191/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
+#sudo sh -c 'printf "# Allow connections over AWS VPC within private subnet\n" >> /etc/postgresql/10/main/pg_hba.conf'
+#sudo sh -c 'printf "host\tall\t\tall\t\t10.0.0.0/28\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
+#sudo sh -c 'printf "# Allow connections from Insight\n" >> /etc/postgresql/10/main/pg_hba.conf'
+#sudo sh -c 'printf "host\tall\t\tall\t\t67.171.25.72/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
+#sudo sh -c 'printf "# Allow connections from Home\n" >> /etc/postgresql/10/main/pg_hba.conf'
+#sudo sh -c 'printf "host\tall\t\tall\t\t73.225.252.191/32\t\tmd5\n" >> /etc/postgresql/10/main/pg_hba.conf'
 
 # You will also need to update postgreqql.conf to listen to the correct IP-addresses
 # The simplest way is to replace "localhost" with "*",
 # though it is best to use "a,list,of,IP,addresses"
 # sudo nano /etc/postgresql/10/main/postgresql.conf
-# Once all of the settigs are correct, then restart the sql service
-sudo /etc/init.d/postgresql restart
 
 git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
 
+sudo cp ~/dstarkebaum.github.io.git/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
+sudo cp ~/dstarkebaum.github.io.git/pg_hba.conf /etc/postgresql/10/main/postgresql.conf
+
+# Once all of the settigs are correct, then restart the sql service
+sudo /etc/init.d/postgresql restart
 
 # setup airflow
 #export AIRFLOW_HOME=~/airflow
