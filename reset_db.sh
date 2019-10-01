@@ -11,7 +11,7 @@ sudo -u postgres psql -c "CREATE DATABASE $USER OWNER $USER;"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $USER TO $USER;"
 
 # Create tables
-sh create_tables.sh
+sh create_tables_int.sh
 
 # https://chrisjean.com/view-csv-data-from-the-command-line/
 # Use a combination of the cat, column, and less commands

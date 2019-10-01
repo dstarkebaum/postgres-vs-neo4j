@@ -3,7 +3,7 @@
 # Create tables
 #psql -c "CREATE TABLE papers (id VARCHAR(40) PRIMARY KEY, title TEXT, year SMALLINT, doi TEXT);"
 #psql -c "CREATE TABLE inCits (id VARCHAR(40), inCit_id VARCHAR(40), PRIMARY KEY (id, inCit_id));"
-psql -c "CREATE TABLE papers (id NUMERIC(48), title TEXT, year SMALLINT, doi TEXT);"#, abstract TEXT);"
+psql -c "CREATE TABLE papers (id NUMERIC(48), title TEXT, year SMALLINT, doi TEXT);"
 psql -c "CREATE TABLE inCits (id NUMERIC(48), inCit_id NUMERIC(48));"
 #id VARCHAR(40) REFERENCES papers(id),
 #inCit_id VARCHAR(40) REFERENCES papers(id),
