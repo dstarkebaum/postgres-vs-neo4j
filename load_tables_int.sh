@@ -1,8 +1,13 @@
 #!/bin/bash
 #export PSQL_HOST=10.0.0.9
+source ~/.profile
 export start_time=$SECONDS
-#aws s3 cp s3://data-atsume-arxiv/open-corpus/2019-09-17/s2-corpus-000.gz data/s2-corpus/s2-corpus-000.gz
-#gunzip data/s2-corpus/s2-corpus-000.gz
+
+# clear out the data directories if present
+rm -rf /data/csv
+rm -rf /data/s2-corpus
+mkdir data/csv
+mkdir data/s2-corpus
 
 function make_csv {
   echo "$((SECONDS-start_time)): Downloading $1.gz from S3..."
@@ -14,19 +19,15 @@ function make_csv {
 }
 
 function load_csv {
-  #psql -h '10.0.0.5' -d ubuntu -U ubuntu -c \
-  #psql -h 'localhost' -d david -U david -c "\copy ${1} (${2}) from $(pwd)/data/csv/${1}.csv with delimiter as '|'"
   echo "$((SECONDS-start_time)): Copying $(pwd)/data/csv/${1}.csv into $USER: ${1}(${2}) at $PSQL_HOST"
-  psql -h "$PSQL_HOST" -d $USER -U $USER -c "\copy ${1}(${2}) FROM $(pwd)/data/csv/${1}.csv WITH (FORMAT CSV, HEADER, DELIMITER '|')"
-  #echo "Deleting duplicates in the authors table based on authors.id"
-  #psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM authors a USING authors b WHERE a.ser < b.ser AND a.id = b.id"
-  #echo "Deleting duplicates in the author_papers table"
-  #psql -h 'localhost' -d $USER -U $USER -c "DELETE FROM paper_authors a USING paper_authors b WHERE a.ser < b.ser AND a.paper_id = b.paper_id AND a.author_id = b.author_id"
-  #echo "Transferring table $1 from local to main database at 10.0.0.9 (PostgreSQL server on private subnet)"
-  #psql -h 'localhost' -d $USER -U $USER -c "\copy ${1} TO stdout" | psql -h 10.0.0.9 -U ubuntu ubuntu -c "\copy ${1} from stdin"
-}
-#users (id, email, first_name, last_name)
 
+  #psql -h 'host_name_or_ip' -d database_name -U user_name -c "SQL query"
+  # SQL query: "\copy table_name(list,of,column,names) FROM absolute/path/to/local/csv WITH (OPTIONS)"
+  psql -h "$PSQL_HOST" -d $USER -U $USER -c "\copy ${1}(${2}) FROM $(pwd)/data/csv/${1}.csv WITH (FORMAT CSV, HEADER, DELIMITER '|')"
+
+}
+
+# There are 176 "s2-corpus-xxx" files in S3 which need to be unzipped, parsed, and loaded into the database
 for i in {000..176}
 do
   make_csv "s2-corpus-$i"
@@ -36,7 +37,8 @@ do
   load_csv "authors" "id, name"
   load_csv "paper_authors" "paper_id, author_id"
   echo "$((SECONDS-start_time)): clearing data folder"
-  rm -r data/*
+  rm -r data/csv
+  rm -r data/s2-corpus
 done
 
 #papers_csv = r"data/csv/papers.csv"

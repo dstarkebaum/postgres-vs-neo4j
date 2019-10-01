@@ -37,7 +37,7 @@ sudo apt-get --yes install \
 pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
 
 # create a PostgreSQL history file for logging
-touch .psql_history
+touch ~/.psql_history
 
 # Create a new user/role (ubuntu) with default password (ubuntu)
 # This user can login, create new databases, and create new roles
@@ -82,6 +82,9 @@ sudo cp ~/dstarkebaum.github.io/postgresql.conf /etc/postgresql/10/main/postgres
 
 # Once all of the settigs are correct, then restart the sql service
 sudo /etc/init.d/postgresql restart
+
+# Check status of database with:
+# pg_lsclusters
 
 # setup airflow
 #export AIRFLOW_HOME=~/airflow

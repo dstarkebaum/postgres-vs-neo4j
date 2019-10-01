@@ -6,11 +6,8 @@ import time
 import sys
 #import argparse
 
-# Input File (100GB JSON)
-#sample_path = r"data/s2-sample/sample-S2-records"
-corpus_path = os.getcwd()+'/data/s2-corpus/'+sys.argv[1] #r"data/s2-corpus/s2-corpus-000"
-# TODO: Accept path from command line
-
+# Input File (1.5GB JSON)
+corpus_path = os.getcwd()+'/data/s2-corpus/'+sys.argv[1]
 
 if not os.path.exists('data/csv'):
     os.makedirs('data/csv')
