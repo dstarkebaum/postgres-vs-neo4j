@@ -43,7 +43,8 @@ for file in [papers_csv,inCits_csv,outCits_csv, authors_csv, paper_authors_csv]:
 
 start_time = time.time()
 
-print("Parsing: "+corpus_path+" at start time: "+str(start_time))
+print("Parsing: "+corpus_path)
+print("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time)))
 
 # keep a count of the number of records parsed
 count = 0
@@ -88,9 +89,10 @@ with open(corpus_path, 'r') as json_in, \
         #    break
         js_line = json.loads(line)
         count = count + 1
-        idNum = int(clean(js_line['id']),16)
+        idNum = str(int(clean(js_line['id']),16))
         title = clean(js_line['title'])
         doi = clean(js_line['doi'])
+        #abstract = clean(js_line['paperAbstract'])
 
         # some entries seem to be missing a year
         # so just use an empty string
@@ -100,7 +102,7 @@ with open(corpus_path, 'r') as json_in, \
             year = ''
 
 
-        paper_record = [idNum,title,year,doi]
+        paper_record = [idNum,title,year,doi]#, abstract]
         #js_line['s2Url']-> https://semanticscholar.org/paper/'id'
         #out_1.write(idNum+'\n')
         inCits = js_line['inCitations']
@@ -111,10 +113,10 @@ with open(corpus_path, 'r') as json_in, \
 
         # inCitations and outCitations need to go to their own tables
         for cit_hex in inCits:
-            cit=int(clean(cit_hex),16)
+            cit=str(int(clean(cit_hex),16))
             inCits_out.write(format([idNum,cit]))
         for cit_hex in outCits:
-            cit=int(clean(cit_hex),16)
+            cit=str(int(clean(cit_hex),16))
             outCits_out.write(format([idNum,cit]))
 
         # we want to make sure duplicate authors are not saved
