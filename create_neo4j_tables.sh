@@ -29,17 +29,13 @@ do
 
   make_csv "s2-corpus-$i"
 
-  cd data/neo4j
-
   for f in "papers" "is_cited_by" "cites" "authors" "has_author" "is_author_of"
   do
-    echo "$((SECONDS-start_time)): zipping $f.csv"
-    gzip $f.csv
-    echo "$((SECONDS-start_time)): uploading $f.csv.gz to S3"
-    aws s3 cp $f.csv.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$1/$f.csv.gz
+    echo "$((SECONDS-start_time)): zipping data/neo4j/$f.csv"
+    gzip -r data/neo4j/$f.csv
+    echo "$((SECONDS-start_time)): uploading data/neo4j/$f.csv.gz to S3"
+    aws s3 cp data/neo4j/$f.csv.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$1/$f.csv.gz
   done
-
-  cd ../..
 
   rm -r data/s2-corpus
   rm -r data/neo4j

@@ -1,5 +1,9 @@
 import os
 
+# create directory if needed
+if not os.path.exists('data/neo4j'):
+    os.makedirs('data/neo4j')
+
 # write header files to csv
 d = '|'
 def format(list):
