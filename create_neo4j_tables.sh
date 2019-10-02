@@ -6,6 +6,7 @@ export start_time=$SECONDS
 rm -rf data/neo4j
 rm -rf data/s2-corpus
 
+mkdir data/neo4j
 python3 create_neo4j_headers.py
 
 function make_csv {
