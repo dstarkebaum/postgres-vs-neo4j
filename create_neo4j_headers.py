@@ -1,5 +1,5 @@
 import os
-
+import sys
 # write header files to csv
 json_file = sys.argv[1]
 d = '|'
