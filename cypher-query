@@ -1,0 +1,5 @@
+LOAD CSV WITH HEADERS FROM file \
+  file:///$(pwd)/data/csv/papers.csv AS row \
+  CREATE (p:Paper { id: row.id }
+    SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
+    

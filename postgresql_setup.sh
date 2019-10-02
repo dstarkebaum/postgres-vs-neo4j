@@ -34,7 +34,7 @@ sudo apt-get --yes install \
   libpq-dev=10.10-0ubuntu0.18.04.1
 
 # install python packages
-pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
+#pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
 
 # create a PostgreSQL history file for logging
 touch ~/.psql_history
