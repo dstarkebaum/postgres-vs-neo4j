@@ -25,7 +25,7 @@ def format(list):
     return d.join(list)+'\n'
 # generate a path string from a single file name
 def path(file):
-    return(os.getcwd()+"/data/neo4j/"+json_file+"_"+file)
+    return(os.getcwd()+"/data/neo4j/"+json_file+"-"+file)
 
 # define paths of output files (csv)
 papers_csv = path("papers.csv")

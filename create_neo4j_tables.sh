@@ -31,10 +31,11 @@ do
 
   for f in "papers" "is_cited_by" "cites" "authors" "has_author" "is_author_of"
   do
-    echo "$((SECONDS-start_time)): zipping data/neo4j/s2-corpus-$i'_'$f.csv"
-    gzip -r data/neo4j/s2-corpus-$i'_'$f.csv
-    echo "$((SECONDS-start_time)): uploading data/neo4j/s2-corpus-$i'_'$f.csv.gz to S3"
-    aws s3 cp data/neo4j/s2-corpus-$i'_'$f.csv.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$1'_'$f.csv.gz
+    path=`echo data/neo4j/s2-corpus-$i-$f.csv`
+    echo "$((SECONDS-start_time)): zipping $path"
+    gzip -r $path
+    echo "$((SECONDS-start_time)): uploading $path.gz to S3"
+    aws s3 cp $path.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$path.gz
   done
 
   rm -r data/s2-corpus
