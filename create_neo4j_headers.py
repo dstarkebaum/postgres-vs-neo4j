@@ -1,12 +1,11 @@
 import os
-import sys
+
 # write header files to csv
-json_file = sys.argv[1]
 d = '|'
 def format(list):
     return d.join(list)+'\n'
 def path(file):
-    return(os.getcwd()+"/data/neo4j/"+json_file+"_"+file)
+    return(os.getcwd()+"/data/neo4j/"+file)
 
 papers_header = path("papers_header.csv")
 is_cited_by_header = path("is_cited_by_header.csv")
