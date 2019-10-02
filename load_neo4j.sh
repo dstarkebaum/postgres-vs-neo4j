@@ -3,6 +3,19 @@
 # neo4j settings can be adjusted here of needed:
 # sudo nano /etc/neo4j/neo4j.conf
 
+function download_csv {
+  for i in {000..176}
+  do
+    for f in "papers" "is_cited_by" "cites" "authors" "has_author" "is_author_of"
+    do
+      echo "$((SECONDS-start_time)): zipping $f.csv"
+      gzip $f.csv
+      echo "$((SECONDS-start_time)): uploading $f.csv.gz to S3"
+      aws s3 cp $f.csv.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$1/$f.csv.gz
+    done
+  done
+}
+
 # use glob to find all files like "data/neo4j/s2-corpus-001_papers.csv"
 # then store the results in a comma-separated string to pass to neo4j-admin
 papers="data/neo4j/papers_header.csv.gz,`echo data/neo4j/*papers.csv.gz | tr ' ' ','`"
