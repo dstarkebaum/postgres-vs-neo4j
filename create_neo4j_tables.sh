@@ -16,7 +16,7 @@ function make_csv {
   gunzip -f data/s2-corpus/$1.gz
 
   echo "$((SECONDS-start_time)): Converting $1 JSON to Neo4j CSV tables"
-  python3 parse_json_to_csv_neo4j.py $1
+  python3 parse_json_to_neo4j.py $1
 
 }
 
