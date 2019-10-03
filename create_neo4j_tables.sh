@@ -17,7 +17,7 @@ function make_csv {
   gunzip -f data/s2-corpus/$1.gz
 
   echo "$((SECONDS-start_time)): Converting $1 JSON to Neo4j CSV tables"
-  python3 parse_json_to_neo4j.py $1
+  python3 parse_json_to_neo4j.py $1 --path data/neo4j --unique
 
 }
 
@@ -32,10 +32,12 @@ do
   for f in "papers" "is_cited_by" "cites" "authors" "has_author" "is_author_of"
   do
     file=`echo s2-corpus-$i-$f.csv`
-    echo "$((SECONDS-start_time)): zipping data/neo4j/$file"
-    gzip -r data/neo4j/$file
-    echo "$((SECONDS-start_time)): uploading data/neo4j/$file.gz to S3"
-    aws s3 cp data/neo4j/$file.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$file.gz
+    #echo "$((SECONDS-start_time)): zipping data/neo4j/$file"
+    #gzip -r data/neo4j/$file
+    #echo "$((SECONDS-start_time)): uploading data/neo4j/$file.gz to S3"
+    #aws s3 cp data/neo4j/$file.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$file.gz
+    echo "$((SECONDS-start_time)): uploading data/neo4j/$file to S3"
+    aws s3 cp data/neo4j/$file.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$file
   done
 
   rm -r data/s2-corpus
