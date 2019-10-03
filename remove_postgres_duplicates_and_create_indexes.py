@@ -35,11 +35,11 @@ def create_index(
         remove_duplicates(cursor,table,columns)
         uni='UNIQUE '
     if gin:
-        if (gin_type=='trigram' || gin_type=='trgm'):
+        if (gin_type=='trigram' or gin_type=='trgm'):
             gi=' USING GIN({c} gin_trgm_ops)'.format(c=columns[0])
-        elif (gin_type=='vector' || gin_type=='tsvector' || gin_type=='vec'):
+        elif (gin_type=='vector' or gin_type=='tsvector' or gin_type=='vec'):
             gi=' USING GIN(to_tsvector("simple",{c}))'.format(c=columns[0])
-        else
+        else:
             print("Ignoring invalid gin_type: " + gin_type)
     cols = ', '.join(columns)
     index= 'index {t}_{c_o}'.format(
@@ -72,14 +72,14 @@ def load_csv(file,table,headers,cursor):
             """.format(f=file,d=delimiter,t=table,h=heads)
             )
 
-def main(host='10.0.0.5',database='ubuntu',user='ubuntu',password='ubuntu'):
+def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
     #pw = input('enter database password for david: ')
     # options for tables include:
     # dbname=postgres user=postgres
     # dbname=ubuntu user=postgres
     #conn = psycopg2.connect("host=localhost dbname=david user=david password=david")
     #conn = psycopg2.connect("dbname=postgres user=postgres")
-
+    #host=10.0.0.5
     #TODO: Modify this to connect over network from one EC2 instance to another
     #conn = psycopg2.connect("host=localhost dbname=david user=david password=david")
     connection = psycopg2.connect('''
