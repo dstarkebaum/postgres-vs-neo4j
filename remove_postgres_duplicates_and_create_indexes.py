@@ -15,9 +15,9 @@ def with_connection(f):
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
                         h='localhost',
-                        db='david',#'ubuntu',
-                        u='david',#'ubuntu',
-                        pw='david')#'ubuntu')
+                        db='ubuntu',
+                        u='ubuntu',
+                        pw='ubuntu')
                 )
         try:
             return_value = f(connection, *args, **kwargs)
