@@ -3,6 +3,7 @@
 import psycopg2
 import os
 import time
+#def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 
 '''
 Decorator to handle database connections.
@@ -12,12 +13,16 @@ def with_connection(f):
         # or use a pool, or a factory function...
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
-                '''.format(h=host,db=database,u=user,pw=password)
-                ):
+                '''.format(
+                        h='localhost',
+                        db='david',#'ubuntu',
+                        u='david',#'ubuntu',
+                        pw='david')#'ubuntu')
+                )
         try:
             return_value = f(connection, *args, **kwargs)
-        except Exception, e:
-            connnection.rollback()
+        except Exception:
+            connection.rollback()
             raise
         else:
             connection.commit() # or maybe not
@@ -42,7 +47,7 @@ def remove_duplicates(connection,table,columns):
             '''.format(t=table) + conditions + ';'
             )
     print(str(time.perf_counter()-start) + " s to remove duplicates " +
-            "from {t}({c})".format(t=title,c=','.join(columns))
+            "from {t}({c})".format(t=table,c=','.join(columns))
             )
 
 @with_connection
@@ -60,7 +65,7 @@ def create_index(
     uni=''
     gi=''
     if unique:
-        remove_duplicates(cursor,table,columns)
+        #remove_duplicates(table,columns)
         uni='UNIQUE '
     if gin:
         if (gin_type=='trigram' or gin_type=='trgm'):
@@ -70,8 +75,8 @@ def create_index(
         else:
             print("Ignoring invalid gin_type: " + gin_type)
     cols = ', '.join(columns)
-    index= 'index {t}_{c_o}'.format(
-            t=table,c_0='_'.join(columns)
+    index= 'index_{t}_{c_o}'.format(
+            t=table,c_o='_'.join(columns)
             )
 
     cursor.execute('''
@@ -80,19 +85,24 @@ def create_index(
             )
 
     print(str(time.perf_counter()-start) + " s to create index on " +
-            "from {t}({c})".format(t=title,c=','.join(columns))
+            "{t}({c})".format(t=table,c=','.join(columns))
             )
-
-    if unique and primary:
-        set_primary_key(cursor,table,index)
+    return index
+    #if unique and primary:
+    #    set_primary_key(table,index)
 
 @with_connection
 def set_primary_key(connection,table,index):
     cursor = connection.cursor()
+    start=time.perf_counter()
     cursor.execute('''
     ALTER TABLE {t} ADD PRIMARY KEY USING INDEX {i};
     '''.format(t=table,i=index)
     )
+    print(str(time.perf_counter()-start) + " s to set primary key on " +
+            "{i}".format(i=index)
+            )
+
 
 def load_csv(file,table,headers,cursor):
     delimiter = '|'
@@ -102,9 +112,10 @@ def load_csv(file,table,headers,cursor):
             """.format(f=file,d=delimiter,t=table,h=heads)
             )
 
-#def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 def main():
-    create_index('authors',['id'],unique=True,primary=True)
+    remove_duplicates('authors',['id'])
+    index = create_index('authors',['id'],unique=True,primary=True)
+    set_primary_key('authors',index)
     #create_index(cur,'papers',['id'],unique=True,primary=True)
     #create_index(cur,'paper_authors',['author_id'])
     #create_index(cur,'paper_authors',['paper_id'])
@@ -149,9 +160,6 @@ def main():
     #from information_schema.columns
     #where table_schema not in ('pg_catalog','information_schema')
     #order by 1,2,3
-
-
-def create_all_indexes(cur):
 
 
 if __name__ == "__main__":
