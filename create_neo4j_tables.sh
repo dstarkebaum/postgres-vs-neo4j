@@ -36,8 +36,8 @@ do
     #gzip -r data/neo4j/$file
     #echo "$((SECONDS-start_time)): uploading data/neo4j/$file.gz to S3"
     #aws s3 cp data/neo4j/$file.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$file.gz
-    echo "$((SECONDS-start_time)): uploading data/neo4j/$file to S3"
-    aws s3 cp data/neo4j/$file.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j/$file
+    echo "$((SECONDS-start_time)): uploading data/neo4j-unzipped/$file to S3"
+    aws s3 cp data/neo4j/$file.gz s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j-unzipped/$file
   done
 
   rm -r data/s2-corpus
