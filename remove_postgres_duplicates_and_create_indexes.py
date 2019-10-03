@@ -4,7 +4,33 @@ import psycopg2
 import os
 import time
 
-def remove_duplicates(cursor,table,columns):
+'''
+Decorator to handle database connections.
+'''
+def with_connection(f):
+    def with_connection_(*args, **kwargs):
+        # or use a pool, or a factory function...
+        connection = psycopg2.connect('''
+                host={h} dbname={db} user={u} password={pw}
+                '''.format(h=host,db=database,u=user,pw=password)
+                ):
+        try:
+            return_value = f(connection, *args, **kwargs)
+        except Exception, e:
+            connnection.rollback()
+            raise
+        else:
+            connection.commit() # or maybe not
+        finally:
+            connection.close()
+
+        return return_value
+
+    return with_connection_
+
+@with_connection
+def remove_duplicates(connection,table,columns):
+    cursor = connection.cursor()
     start=time.perf_counter()
     # build up combined conditions from multiple columns
     conditions = ''.join(
@@ -19,8 +45,9 @@ def remove_duplicates(cursor,table,columns):
             "from {t}({c})".format(t=title,c=','.join(columns))
             )
 
+@with_connection
 def create_index(
-        cursor,
+        connection,
         table,
         columns,
         unique=False,
@@ -28,6 +55,7 @@ def create_index(
         gin=False,
         gin_type='trigram'
         ):
+    cursor = connection.cursor()
     start=time.perf_counter()
     uni=''
     gi=''
@@ -58,7 +86,9 @@ def create_index(
     if unique and primary:
         set_primary_key(cursor,table,index)
 
-def set_primary_key(cursor,table,index):
+@with_connection
+def set_primary_key(connection,table,index):
+    cursor = connection.cursor()
     cursor.execute('''
     ALTER TABLE {t} ADD PRIMARY KEY USING INDEX {i};
     '''.format(t=table,i=index)
@@ -72,7 +102,24 @@ def load_csv(file,table,headers,cursor):
             """.format(f=file,d=delimiter,t=table,h=heads)
             )
 
-def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
+#def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
+def main():
+    create_index('authors',['id'],unique=True,primary=True)
+    #create_index(cur,'papers',['id'],unique=True,primary=True)
+    #create_index(cur,'paper_authors',['author_id'])
+    #create_index(cur,'paper_authors',['paper_id'])
+
+    #remove_duplicates(cur,'incits',['id','incit_id'])
+    #remove_duplicates(cur,'outcits',['id','outcit_id'])
+
+    #create_index(cur,'incits',['id'])
+    #create_index(cur,'outcits',['id'])
+
+    #create_index(cur,'authors',['name'],gin=True)
+    #create_index(cur,'papers',['title'],gin=True,gin_type='vector')
+
+
+
     #pw = input('enter database password for david: ')
     # options for tables include:
     # dbname=postgres user=postgres
@@ -82,12 +129,6 @@ def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
     #host=10.0.0.5
     #TODO: Modify this to connect over network from one EC2 instance to another
     #conn = psycopg2.connect("host=localhost dbname=david user=david password=david")
-    connection = psycopg2.connect('''
-            host={h} dbname={db} user={u} password={pw}
-            '''.format(h=host,db=database,u=user,pw=password)
-            )
-    cur = connection.cursor()
-
 
     #create_tables(cursor)
     #papers_header = 'id,title,year,doi'
@@ -103,8 +144,6 @@ def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
     #load_csv(paper_authors_csv,'paper_authors',['paper_id','author_id'],cursor)
 
     # TODO: Create index on authors and paper_authors and remove duplicate rows
-    create_all_indexes(cur)
-
     # get list of tables and columns in schema
     #'''select table_schema, table_name, column_name
     #from information_schema.columns
@@ -113,21 +152,7 @@ def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 
 
 def create_all_indexes(cur):
-    create_index(cur,'authors',['id'],unique=True,primary=True)
-    create_index(cur,'papers',['id'],unique=True,primary=True)
-    create_index(cur,'paper_authors',['author_id'])
-    create_index(cur,'paper_authors',['paper_id'])
 
-    remove_duplicates(cur,'incits',['id','incit_id'])
-    remove_duplicates(cur,'outcits',['id','outcit_id'])
-
-    create_index(cur,'incits',['id'])
-    create_index(cur,'outcits',['id'])
-
-    create_index(cur,'authors',['name'],gin=True)
-    create_index(cur,'papers',['title'],gin=True,gin_type='vector')
-
-    conn.commit()
 
 if __name__ == "__main__":
     main()
