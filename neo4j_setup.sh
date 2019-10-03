@@ -38,7 +38,7 @@ sudo apt-get --yes update
 
 sudo apt-get --yes install neo4j
 
-git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
+#git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
 
 
 # See neo4j installation page for more details:
