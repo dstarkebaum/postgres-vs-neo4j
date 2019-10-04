@@ -5,7 +5,7 @@ export start_time=$SECONDS
 # neo4j settings can be adjusted here of needed:
 # sudo nano /etc/neo4j/neo4j.conf
 
-aws s3 sync s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j data/neo4j
+#aws s3 sync s3://data-atsume-arxiv/open-corpus/2019-09-17/neo4j data/neo4j
 
 # use glob to find all files like "data/neo4j/s2-corpus-001_papers.csv"
 # then store the results in a comma-separated string to pass to neo4j-admin
