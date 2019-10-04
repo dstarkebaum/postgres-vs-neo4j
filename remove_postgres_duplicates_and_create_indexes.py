@@ -23,9 +23,11 @@ def with_connection(f):
             return_value = f(connection, *args, **kwargs)
         except Exception:
             connection.rollback()
+            print(f.__name__+" failed!")
             raise
         else:
             connection.commit() # or maybe not
+            print(f.__name__+" success!")
         finally:
             connection.close()
 
@@ -58,15 +60,33 @@ def create_index(
         unique=False,
         primary=False,
         gin=False,
-        gin_type='trigram'
+        gin_type='trigram',
+        explain=False,
+        analyze=False
         ):
+
     cursor = connection.cursor()
     start=time.perf_counter()
+
+    cols = ', '.join(columns)
+
+    index= 'index_{t}_{c_o_l}'.format(
+            t=table,c_o_l='_'.join(columns)
+            )
+
+    exp=''
+    if explain:
+        exp='EXPLAIN '
+
+    ana=''
+    if analyze:
+        ana='ANALYZE '
+
     uni=''
-    gi=''
     if unique:
-        #remove_duplicates(table,columns)
         uni='UNIQUE '
+
+    gi=''
     if gin:
         if (gin_type=='trigram' or gin_type=='trgm'):
             gi=' USING GIN({c} gin_trgm_ops)'.format(c=columns[0])
@@ -74,17 +94,14 @@ def create_index(
             gi=' USING GIN(to_tsvector("simple",{c}))'.format(c=columns[0])
         else:
             print("Ignoring invalid gin_type: " + gin_type)
-    cols = ', '.join(columns)
-    index= 'index_{t}_{c_o}'.format(
-            t=table,c_o='_'.join(columns)
-            )
 
     cursor.execute('''
-            CREATE {u}INDEX {i} ON {t}({c}){g};
-            '''.format(u=uni,t=table,c=cols,i=index,g=gi)
+            {e}{a}CREATE {u}INDEX {i} ON {t}({c}){g};
+            '''.format(e=exp,a=ana,u=uni,t=table,c=cols,i=index,g=gi)
             )
 
-    print(str(time.perf_counter()-start) + " s to create index on " +
+    print(str(time.perf_counter()-start) +
+            "s to create index on " +
             "{t}({c})".format(t=table,c=','.join(columns))
             )
     return index
@@ -92,14 +109,30 @@ def create_index(
     #    set_primary_key(table,index)
 
 @with_connection
-def set_primary_key(connection,table,index):
+def set_primary_key(
+        connection,
+        table,
+        index,
+        explain=False,
+        analyze=False
+        ):
     cursor = connection.cursor()
     start=time.perf_counter()
+
+    exp=''
+    if explain:
+        exp='EXPLAIN '
+
+    ana=''
+    if analyze:
+        ana='ANALYZE '
+
     cursor.execute('''
-    ALTER TABLE {t} ADD PRIMARY KEY USING INDEX {i};
-    '''.format(t=table,i=index)
+    {e}{a}ALTER TABLE {t} ADD PRIMARY KEY USING INDEX {i};
+    '''.format(e=exp,a=ana,t=table,i=index)
     )
-    print(str(time.perf_counter()-start) + " s to set primary key on " +
+    print(str(time.perf_counter()-start) +
+            "s to set primary key on " +
             "{i}".format(i=index)
             )
 
@@ -113,8 +146,8 @@ def load_csv(file,table,headers,cursor):
             )
 
 def main():
-    remove_duplicates('authors',['id'])
-    index = create_index('authors',['id'],unique=True,primary=True)
+    index = create_index('authors',['id'],unique=True,primary=True,explain=True)
+    remove_duplicates('authors',['id'],explain=True)
     set_primary_key('authors',index)
     #create_index(cur,'papers',['id'],unique=True,primary=True)
     #create_index(cur,'paper_authors',['author_id'])
