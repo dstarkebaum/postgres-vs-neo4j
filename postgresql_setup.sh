@@ -2,7 +2,7 @@
 
 # ami-06f2f779464715dc5 == Ubuntu Server 18.04 LTS (HVM), SSD Volume Type (64-bit x86)
 
-# NOTE: Installation logs can eb found in:
+# NOTE: apt installation logs can eb found in:
 # nano /var/log/apt/term.log
 
 #============= within EC2 instance =====================
@@ -36,7 +36,7 @@ sudo apt-get --yes install \
 # install python packages
 #pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
 
-# create a PostgreSQL history file for logging
+# create a PostgreSQL history file to record queries to the database
 touch ~/.psql_history
 
 # Create a new user/role (ubuntu) with default password (ubuntu)

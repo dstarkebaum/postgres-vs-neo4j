@@ -30,6 +30,8 @@ def parse_args(args):
             action='store_true')
     parser.add_argument('--unique',help='make each csv file unique by including the json_src name',
             action='store_true')
+    parser.add_argument('--neo4j',help='Include :TYPE and :LABEL for Neo4j',
+            action='store_true')
     parser.add_argument('-p','--path',type=str,default='data/csv',
             help='relative path to store the output csv files')
     return parser.parse_args()
@@ -62,7 +64,7 @@ def main(sys_args):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    parse_json(corpus_path, output_dir, make_int, args.unique)
+    parse_json(corpus_path, output_dir, make_int=make_int, unique=args.unique,neo4j=args.neo4j)
 
 '''
 Combine output_dir, table_name, and src_file name into a complete (absolute) path string
@@ -79,7 +81,7 @@ def path(table_name, output_dir, src_file='', unique=False):
         filename = table_name+'.csv'
     return(os.path.join(os.getcwd(),output_dir,filename))
 
-def parse_json(corpus_path, output_dir, src_file, make_int=False,unique=False):
+def parse_json(corpus_path, output_dir, src_file, make_int=False,unique=False,neo4j=False):
     src_file = os.path.basename(corpus_path)
     # Print status to STDOUT
     start_time = time.perf_counter()
@@ -141,11 +143,17 @@ def parse_json(corpus_path, output_dir, src_file, make_int=False,unique=False):
                     cit=clean(cit)
                     if make_int:
                         cit = str(int(cit,16))
-                    files['is_cited_by'].write(format([id,cit]))
+                    row = [id,cit]
+                    if neo4j:
+                        row = [id,cit,':IS_CITED_BY']
+                    files['is_cited_by'].write(format(row))
                 for cit in cites_list:
                     if make_int:
                         cit = str(int(cit,16))
                     cit=clean(cit)
+                    row = [id,cit]
+                    if neo4j:
+                        row = [id,cit,':CITES']
                     files['cites'].write(format([id,cit]))
 
                 author_set = set()
@@ -166,9 +174,18 @@ def parse_json(corpus_path, output_dir, src_file, make_int=False,unique=False):
 
                     if author_id not in author_set:
                         author_set.add(author_id)
-                        files['authors'].write(format([author_id,author_name]))
-                        files['has_author'].write(format([id,author_id]))
-                        files['is_author_of'].write(format([author_id,id]))
+                        author_row = [author_id,author_name]
+                        has_author_row = [id,author_id]
+                        is_author_of_row = [author_id,id]
+
+                        if neo4j:
+                            author_row = [author_id,author_name,':Author']
+                            has_author_row = [id,author_id,'HAS_AUTHOR']
+                            is_author_of_row = [author_id,id,'IS_AUTHOR_OF']
+
+                        files['authors'].write(format(author_row))
+                        files['has_author'].write(format(has_author_row))
+                        files['is_author_of'].write(format(is_author_of_row))
 
     print(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
 
