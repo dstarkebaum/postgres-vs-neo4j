@@ -3,6 +3,7 @@
 import psycopg2
 import os
 import time
+import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 
 '''
@@ -14,10 +15,10 @@ def with_connection(f):
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
-                        h='localhost',
-                        db='ubuntu',
-                        u='ubuntu',
-                        pw='ubuntu')
+                        h=host_config.HOST,
+                        db=host_config.DATABASE,
+                        u=host_config.USER,
+                        pw=host_config.PASSWORD)
                 )
         try:
             return_value = f(connection, *args, **kwargs)

@@ -1,5 +1,14 @@
-LOAD CSV WITH HEADERS FROM file \
-  file:///$(pwd)/data/csv/papers.csv AS row \
-  CREATE (p:Paper { id: row.id }
-    SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
-    
+file:///$(pwd)/data/csv/papers.csv
+
+LOAD CSV WITH HEADERS FROM {filename} AS row \
+CREATE (p:Paper { id: row.id }
+SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
+
+
+
+    USING PERIODIC COMMIT 500
+    LOAD CSV WITH HEADERS FROM 'file:///data.csv' AS row
+    MERGE (pet:Pet {petId: row.PetId})
+    MERGE (owner:Owner {ownerId: row.OwnerId})
+     ON CREATE SET owner.name = row.OwnerName
+    MERGE (pet)-[r:OWNED_BY]->(owner)

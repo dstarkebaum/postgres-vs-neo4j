@@ -75,10 +75,11 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $USER TO $USER;"
 # though it is best to use "a,list,of,IP,addresses"
 # sudo nano /etc/postgresql/10/main/postgresql.conf
 
-git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
+# Clone the github repository to ubuntu home directory (not to root directory!)
+sudo -u ubuntu git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
 
 sudo cp ~/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
-sudo cp ~/dstarkebaum.github.io/postgresql.conf /etc/postgresql/10/main/postgresql.conf
+#sudo cp ~/dstarkebaum.github.io/postgresql.conf /etc/postgresql/10/main/postgresql.conf
 
 # Once all of the settigs are correct, then restart the sql service
 sudo /etc/init.d/postgresql restart

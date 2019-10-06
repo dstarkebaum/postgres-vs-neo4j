@@ -4,6 +4,7 @@ import time
 import sys
 import csv
 import argparse
+import gzip
 from contextlib import ExitStack
 
 # global variables are frowned upon... probably there is a better way for this...
@@ -22,7 +23,7 @@ def format(list):
 def to_secs(time):
     return "{:0.4f}".format(time)
 
-def parse_args(args):
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('json_src',
             help='Filename (including path) of the json file to parse')
@@ -32,12 +33,14 @@ def parse_args(args):
             action='store_true')
     parser.add_argument('--neo4j',help='Include :TYPE and :LABEL for Neo4j',
             action='store_true')
+    parser.add_argument('--compress',help='gzip output files',
+            action='store_true')
     parser.add_argument('-p','--path',type=str,default='data/csv',
             help='relative path to store the output csv files')
     return parser.parse_args()
 
-def main(sys_args):
-    args = parse_args(sys_args)
+def main():
+    args = parse_args()
 
     corpus_path = os.getcwd()+'/'+args.json_src
     # Input File (1.5GB JSON)
@@ -58,13 +61,14 @@ def main(sys_args):
     output_dir = args.path
 
     if args.unique:
-        print('creating unique filename like: json_src-table_name.csv')
-
+        print('Creating unique filenames like: '+os.path.basename(corpus_path)+'-[table_name].csv')
+    if args.compress:
+        print('Compressing outpus files with gzip')
     print('Exporting to ' + output_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    parse_json(corpus_path, output_dir, make_int=make_int, unique=args.unique,neo4j=args.neo4j)
+    parse_json(corpus_path, output_dir, make_int=make_int, unique=args.unique,neo4j=args.neo4j,compress=args.compress)
 
 '''
 Combine output_dir, table_name, and src_file name into a complete (absolute) path string
@@ -72,31 +76,47 @@ of the form: /absolute/path/to/output_dir/table_name.csv
 if unique=True is passed, the name of the json src file is also included:
     /absolute/path/to/output_dir/src_file-table_name.csv
 '''
-def path(table_name, output_dir, src_file='', unique=False):
+def path(table_name, output_dir, src_file='', unique=False,compress=False):
     filename = ''
 
     if unique:
         filename = src_file+"-"+table_name+'.csv'
     else:
         filename = table_name+'.csv'
+    if compress:
+        filename = filename+'.gz'
     return(os.path.join(os.getcwd(),output_dir,filename))
 
-def parse_json(corpus_path, output_dir, src_file, make_int=False,unique=False,neo4j=False):
+def write_headers(files):
+    files['papers'].write(format(['id:ID(Paper)','title','year:INT','doi',':LABEL']))
+    files['is_cited_by'].write(format(['id:START_ID(Paper)','is_cited_by_id:END_ID(PAPER)',':TYPE']))
+    files['cites'].write(format(['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']))
+    files['authors'].write(format(['id:ID(Author)','name',':LABEL']))
+    files['has_author'].write(format(['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']))
+    files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
+
+def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,compress=False):
     src_file = os.path.basename(corpus_path)
     # Print status to STDOUT
     start_time = time.perf_counter()
     print("Parsing: "+corpus_path)
     print("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
-    output_files = {t:path(t,output_dir,src_file) for t in tables}
+    output_files = {t:path(t,output_dir,src_file,unique,compress) for t in tables}
 
     # keep a count of the number of records parsed
     count = 0
 
     with open(corpus_path, 'r') as json_in:
         with ExitStack() as stack:
-            files = { t:stack.enter_context(open(output_files[t],'w')) for t in tables}
+            files = {}
+            if compress:
+                files = {t : stack.enter_context(gzip.open(output_files[t],'wt')) for t in tables}
+            else:
+                files = { t : stack.enter_context(open(output_files[t],'w')) for t in tables}
 
+            if neo4j:
+                write_headers(files)
             # Parse each line of JSON, and write the appropriate fields
             # to each csv table
             for line in json_in:
@@ -190,4 +210,4 @@ def parse_json(corpus_path, output_dir, src_file, make_int=False,unique=False,ne
     print(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
 
 if __name__=="__main__":
-    main(sys.argv[1:])
+    main()
