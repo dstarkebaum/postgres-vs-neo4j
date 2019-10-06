@@ -10,7 +10,7 @@ from contextlib import ExitStack
 # global variables are frowned upon... probably there is a better way for this...
 # delimiter for CSV files
 d = '|'
-tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author', 'is_author_of']
+tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 # eliminate newlines, quotations, delimiters, and extra white space
 def clean(text):
@@ -89,11 +89,11 @@ def path(table_name, output_dir, src_file='', unique=False,compress=False):
 
 def write_headers(files):
     files['papers'].write(format(['id:ID(Paper)','title','year:INT','doi',':LABEL']))
-    files['is_cited_by'].write(format(['id:START_ID(Paper)','is_cited_by_id:END_ID(PAPER)',':TYPE']))
+    files['is_cited_by'].write(format(['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']))
     files['cites'].write(format(['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']))
     files['authors'].write(format(['id:ID(Author)','name',':LABEL']))
     files['has_author'].write(format(['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']))
-    files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
+    #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
 
 def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,compress=False):
     src_file = os.path.basename(corpus_path)
@@ -149,7 +149,8 @@ def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,
                     year = ''
 
                 paper_record = [id,title,year,doi]#, abstract]
-
+                if neo4j:
+                    paper_record.append(':Paper')
                 files['papers'].write(format(paper_record))
 
                 # each JSON row conains a list of citations and authors
@@ -196,16 +197,16 @@ def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,
                         author_set.add(author_id)
                         author_row = [author_id,author_name]
                         has_author_row = [id,author_id]
-                        is_author_of_row = [author_id,id]
+                        #is_author_of_row = [author_id,id]
 
                         if neo4j:
                             author_row = [author_id,author_name,':Author']
                             has_author_row = [id,author_id,'HAS_AUTHOR']
-                            is_author_of_row = [author_id,id,'IS_AUTHOR_OF']
+                        #    is_author_of_row = [author_id,id,'IS_AUTHOR_OF']
 
                         files['authors'].write(format(author_row))
                         files['has_author'].write(format(has_author_row))
-                        files['is_author_of'].write(format(is_author_of_row))
+                        #files['is_author_of'].write(format(is_author_of_row))
 
     print(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
 

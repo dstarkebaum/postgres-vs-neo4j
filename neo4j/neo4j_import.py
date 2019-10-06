@@ -5,11 +5,9 @@ import os
 from contextlib import ExitStack
 import time
 from datetime import datetime
-import py2neo
-import config_host
 #default connection parameters
 
-tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author', 'is_author_of']
+tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 
 def parse_args():
@@ -62,7 +60,7 @@ def import_csv(files):
         stdout_log.write('CITES: '+ ','.join(files['cites'])+'\n')
         stdout_log.write('IS_CITED_BY: '+ ','.join(files['is_cited_by'])+'\n')
         stdout_log.write('HAS_AUTHOR: '+ ','.join(files['has_author'])+'\n')
-        stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
+        #stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
 
         stderr_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import')
@@ -73,15 +71,21 @@ def import_csv(files):
                 'import',
                 '--ignore-duplicate-nodes',
                 '--ignore-missing-nodes',
-                '--delimiter="|"',
+                '--delimiter',
+                '|',
                 '--report-file=logs/neo4j.report',
                 '--nodes:Paper',
                 ','.join(files['papers']),
-                '--nodes:Author {a}'.format(a=','.join(files['authors'])),
-                '--relationships:CITES {cit}'.format(cit=','.join(files['cites'])),
-                '--relationships:IS_CITED_BY {cit_by}'.format(cit_by=','.join(files['is_cited_by'])),
-                '--relationships:HAS_AUTHOR {has}'.format(has=','.join(files['has_author'])),
-                '--relationships:IS_AUTHOR_OF {is_a}'.format(is_a=','.join(files['is_author_of']))
+                '--nodes:Author',
+                ','.join(files['authors']),
+                '--relationships:CITES',
+                ','.join(files['cites']),
+                '--relationships:IS_CITED_BY',
+                ','.join(files['is_cited_by']),
+                '--relationships:HAS_AUTHOR',
+                ','.join(files['has_author'])
+                #'--relationships:IS_AUTHOR_OF',
+                #','.join(files['is_author_of'])
                 ],
                 stdout=stdout_log,
                 stderr=stderr_log
@@ -91,45 +95,6 @@ def import_csv(files):
                 str(len(files['papers'])),
                 str(time.perf_counter()-start_time)
                 ]))
-
-'''
-Decorator to handle database connections.
-'''
-def with_connection(f):
-    def with_connection_(*args, **kwargs):
-        # or use a pool, or a factory function...
-        graph = py2neo.Graph(
-                host=config_host.HOST,
-                user=config_host.USER,
-                password=config_host.PASSWORD,
-                port=config_host.PORT,
-                scheme=config_host.SCEME,
-                secure=config_host.SECURE,
-                max_connections=config_host.MAX_CONNECTIONS
-                )
-        transaction = graph.begin(autocommit=False)
-        try:
-            return_value = f(transaction, *args, **kwargs)
-        except Exception:
-            transaction.rollback()
-            print(f.__name__+" failed!")
-            raise
-        else:
-            transaction.commit() # or maybe not
-            print(f.__name__+" success!")
-        #finally:
-        #    connection.close()
-
-        return return_value
-
-    return with_connection_
-
-def load_nodes_from_csv(transaction,filename,label):
-    tx.run('''
-            LOAD CSV WITH HEADERS FROM {filename} AS row \
-            MERGE (l:{label} { id: row.id }
-            SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
-            ''')
 
 
 if __name__ == "__main__":
