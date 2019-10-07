@@ -1,4 +1,5 @@
 # Ignore Semantic Scholar Corpus (1.5GB JSON dataset)
+data/
 setup/data/
 .ipynb_checkpoints/
 import.report
