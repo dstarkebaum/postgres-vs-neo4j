@@ -7,6 +7,10 @@ import argparse
 import gzip
 from contextlib import ExitStack
 
+# EX: To parse one json file into a set of compressed csv files for neo4j, try this:
+# python3 parse_json.py data/s2-corpus/s2-corpus-001 --unique --neo4j --compress
+
+
 # global variables are frowned upon... probably there is a better way for this...
 # delimiter for CSV files
 d = '|'
@@ -121,8 +125,9 @@ def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,
             # to each csv table
             for line in json_in:
 
-                #if 10000 == count:
-                #    break
+                #stop after 10000 rows for testing
+                if 10000 == count:
+                    break
 
                 # test with 100 lines to start
                 if count in [100, 1000, 10000, 100000, 500000]:

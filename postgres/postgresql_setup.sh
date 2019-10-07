@@ -12,20 +12,21 @@ sudo apt-get --yes update && sudo apt-get --yes upgrade
 # install general utilities
 sudo apt-get --yes install \
 ssh=1:7.6p1-4ubuntu0.3 \
-rsync=3.1.2-2.1ubuntu1 \
 git=1:2.17.1-1ubuntu0.4 \
-supervisor=3.3.1-1.1 \
-bc=1.07.1-2 \
 awscli=1.14.44-1ubuntu1
+
+#supervisor=3.3.1-1.1 \
+#bc=1.07.1-2 \
+#rsync=3.1.2-2.1ubuntu1 \
 
 # install python tools
 sudo apt-get --yes install \
   python3-dev=3.6.7-1~18.04 \
-  python3-pip=9.0.1-2.3~ubuntu1.18.04.1 \
   python3-numpy=1:1.13.3-2ubuntu1 \
-  python3-scipy=0.19.1-2ubuntu1 \
   python3-pandas=0.22.0-4 \
   ipython3=5.5.0-1
+  #python3-pip=9.0.1-2.3~ubuntu1.18.04.1 \
+  #python3-scipy=0.19.1-2ubuntu1 \
 
 # install PostgreSQL (assuming version 10)
 sudo apt-get --yes install \
@@ -35,6 +36,7 @@ sudo apt-get --yes install \
 
 # install python packages
 #pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
+yes | pip3 install pandas psycopg2 boto3
 
 # create a PostgreSQL history file to record queries to the database
 touch ~/.psql_history
@@ -76,10 +78,11 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $USER TO $USER;"
 # sudo nano /etc/postgresql/10/main/postgresql.conf
 
 # Clone the github repository to ubuntu home directory (not to root directory!)
+cd /home/ubuntu
 sudo -u ubuntu git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
 
-sudo cp ~/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
-#sudo cp ~/dstarkebaum.github.io/postgresql.conf /etc/postgresql/10/main/postgresql.conf
+sudo cp /home/ubuntu/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
+#sudo cp /home/ubuntu/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/postgresql.conf
 
 # Once all of the settigs are correct, then restart the sql service
 sudo /etc/init.d/postgresql restart

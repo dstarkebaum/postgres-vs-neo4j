@@ -4,23 +4,37 @@ import dash_html_components as html
 import sqlalchemy
 import pandas as pd
 import dash_table
-from sqlalchemy.dialects import postgresql
-import numpy as np
+import sqlalchemy.dialects
+import py2oneo
+import psycopg2
 import plotly.graph_objs as go
 
 
-def database_connect():
+def postgres_connect():
     user = 'ubuntu'
     password = 'ubuntu'
     db = 'ubuntu'
     host = '10.0.0.6'
     url = 'postgresql://{user}:{password}@{host}:{port}/{database}'.url.format(
-            user=user,password=password,host=host,port=port,database=database
+            user=user,password=password,host=host,database=database
     )
     con = sqlalchemy.create_engine(url, client_encoding='utf8')
     return con
 
-con = database_connect()
+def noo4j_connect():
+    user = 'neo4j'
+    password = 'insight'
+    db = 'neo4j'
+    host = '10.0.0.6'
+    graph = Graph(host="10.0.0.11",password="password")
+    url = 'postgresql://{user}:{password}@{host}:{port}/{database}'.url.format(
+            user=user,password=password,host=host,database=database
+    )
+    con = sqlalchemy.create_engine(url, client_encoding='utf8')
+    return con
+
+
+postgres = postgres_connect()
 
 
 

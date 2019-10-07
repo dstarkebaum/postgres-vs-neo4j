@@ -27,7 +27,7 @@ function load_csv {
 }
 
 # There are 176 "s2-corpus-xxx" files in S3 which need to be unzipped, parsed, and loaded into the database
-for i in {000..176}
+for i in {000..000}
 do
   make_csv "s2-corpus-$i"
   load_csv "papers" "id, title, year, doi"

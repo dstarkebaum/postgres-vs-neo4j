@@ -1,8 +1,0 @@
-WARNING: Max 1024 open files allowed, minimum of 40000 recommended. See the Neo4j manual.
-10/06/2019,00:07:05 Starting neo4j-admin import
-Papers: data/csv/s2-corpus-001-papers.csv.gz
-Authors: data/csv/s2-corpus-001-authors.csv.gz
-CITES: data/csv/s2-corpus-001-cites.csv.gz
-IS_CITED_BY: data/csv/s2-corpus-001-is_cited_by.csv.gz
-HAS_AUTHOR: data/csv/s2-corpus-001-has_author.csv.gz
-IS_AUTHOR_OF: data/csv/s2-corpus-001-is_author_of.csv.gz
