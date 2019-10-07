@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument('--prefix',type=str,default='s2-corpus',
             help='filename prefix for csv files')
     parser.add_argument('--suffix',type=str,default='.csv',
-            help='filename prefix for csv files')
+            help='filename suffix for csv files')
     parser.add_argument('--compress', action='store_true',
             help='choose if the source file is compressed (gz)')
 
@@ -54,30 +54,54 @@ def parse_args():
 def main():
     args = parse_args()
     print(os.getcwd())
-    files = {t : path_list(t,args.path,args.prefix,args.suffix,args.start,args.end,args.compress) for t in tables}
+
+
+    # create a dictionary of path names
+    files = {t : path_list(
+                t,
+                args.path,
+                args.prefix,
+                args.suffix,
+                args.start,
+                args.end,
+                args.compress
+            ) for t in tables}
+
+    missing_file = False
+    for file in files:
+        if not os.path.exists(file):
+            missing_file = True
+            print('Missing: ' + file)
+
+    if missing_file:
+        download_and_extract_json(
+            path='data/s2-corpus',
+            prefix=args.prefix,
+            output=args.path,
+            start=args.start,
+            end=args.end,
+            compress=args.compress)
+
     import_csv(files)
 
 
 # Download a single zipped json from S3
-def download_from_s3(num,path='data/s2-corpus',prefix='s2-corpus',bucket='s3://data-atsume-arxiv/open-corpus/2019-09-17/'):
+def download_from_s3(num,path='data/s2-corpus',prefix='s2-corpus',bucket='data-atsume-arxiv'):
 
-    source = bucket + '{prefix}-{num}.gz'.format(
+    source_file = 'open-corpus/2019-09-17/{prefix}-{num}.gz'.format(
             prefix=prefix,num=num)
     destination = '{path}/{prefix}-{num}.gz'.format(
             prefix=prefix,num=num)
 
-    s3 = boto3.resource('s3')
-
-    subprocess.call([
-                'aws',
-                's3',
-                'cp',
-                source,
-                destination
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-    )
+    s3 = boto3.client('s3')
+    start_time = time.perf_counter()
+    print('Downloading '+source_file + ' to ' + destination)
+    s3.download_file(
+            bucket,
+            source_file,
+            destination
+            )
+    print('Completed download in ' + str(time.perf_counter()-start_time)+'s')
 
 def delete_json(filename):
     subprocess.call([ 'rm', '-r', filename ])
@@ -102,21 +126,22 @@ def download_and_extract_json(
                 compress=compress
                 )
         delete_json('{path}/{prefix}-{num}.gz'.format(
-                    prefix=prefix,num=i))
+                prefix=prefix,num=i))
 
 #def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,compress=False):
 
 def path_list(table,path,prefix,suffix,start,end,compress):
     if compress:
         suffix=suffix+'.gz'
+
     return ['{dir}/{pre}-{num}-{tab}{suf}'.format(
-            dir=path,
-            pre=prefix,
-            num=str(i).zfill(3),
-            tab=table,
-            suf=suffix)
-            for i in range(start,end+1
-            )]
+                dir=path,
+                pre=prefix,
+                num=str(i).zfill(3),
+                tab=table,
+                suf=suffix
+                )
+            for i in range(start, end+1) ]
 
 
 def import_csv(files):

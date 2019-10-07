@@ -6,8 +6,16 @@ from contextlib import ExitStack
 import time
 from datetime import datetime
 import py2neo
-import config_host
 #default connection parameters
+
+HOST='localhost',
+USER='neo4j',
+PASSWORD='password',
+PORT=7687,
+SCHEME='bolt',
+SECURE=False,
+MAX_CONNECTIONS=40
+
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
@@ -54,13 +62,13 @@ def with_connection(f):
     def with_connection_(*args, **kwargs):
         # or use a pool, or a factory function...
         graph = py2neo.Graph(
-                host=config_host.HOST,
-                user=config_host.USER,
-                password=config_host.PASSWORD,
-                port=config_host.PORT,
-                scheme=config_host.SCEME,
-                secure=config_host.SECURE,
-                max_connections=config_host.MAX_CONNECTIONS
+                host=HOST,
+                user=USER,
+                password=PASSWORD,
+                port=PORT,
+                scheme=SCHEME,
+                secure=SECURE,
+                max_connections=MAX_CONNECTIONS
                 )
         transaction = graph.begin(autocommit=False)
         try:
