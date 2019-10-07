@@ -5,7 +5,7 @@ import os
 from contextlib import ExitStack
 import time
 from datetime import datetime
-from . import parse_json as parse_json
+from setup import json_to_csv
 import boto3
 
 
@@ -32,11 +32,17 @@ import boto3
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
+def ensure_dir(file_path):
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
 
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('path',type=str,
+    parser.add_argument('corpus_path',type=str,
+            help='Directory of the json corpus')
+    parser.add_argument('csv_path',type=str,
             help='Directory of the parsed csv files')
     parser.add_argument('--start',type=int,default=0,
             help='file number to start with')
@@ -53,89 +59,136 @@ def parse_args():
 
 def main():
     args = parse_args()
+    populate_neo4j(
+        args.corpus_path,
+        args.csv_path,
+        args.prefix,
+        args.suffix,
+        args.start,
+        args.end,
+        args.compress
+    )
+
+def populate_neo4j(
+        corpus_path='data/s2-corpus',
+        csv_path='data/csv',
+        prefix='s2-corpus',
+        suffix='.csv',
+        start=0,
+        end=0,
+        compress=True):
+
     print(os.getcwd())
 
 
     # create a dictionary of path names
-    files = {t : path_list(
-                t,
-                args.path,
-                args.prefix,
-                args.suffix,
-                args.start,
-                args.end,
-                args.compress
+    csv_files = {t : path_list(
+                t, csv_path, prefix, suffix, start, end, compress
             ) for t in tables}
 
     missing_file = False
-    for file in files:
-        if not os.path.exists(file):
-            missing_file = True
-            print('Missing: ' + file)
+    for table in csv_files:
+        for file in csv_files[table]:
+            if not os.path.exists(file):
+                missing_file = True
+                print('Missing: ' + file)
+            else:
+                print(file + ' exists already')
 
     if missing_file:
-        download_and_extract_json(
-            path='data/s2-corpus',
-            prefix=args.prefix,
-            output=args.path,
-            start=args.start,
-            end=args.end,
-            compress=args.compress)
+        print('compress = ' + str(compress))
 
-    import_csv(files)
+        download_and_extract_json(
+            corpus_path=corpus_path,
+            prefix=prefix,
+            csv_path=csv_path,
+            start=start,
+            end=end,
+            compress=compress)
+
+    import_csv(csv_files)
 
 
 # Download a single zipped json from S3
-def download_from_s3(num,path='data/s2-corpus',prefix='s2-corpus',bucket='data-atsume-arxiv'):
+def download_from_s3(
+        i=0,
+        corpus_path='data/s2-corpus',
+        prefix='s2-corpus',
+        bucket='data-atsume-arxiv'):
 
-    source_file = 'open-corpus/2019-09-17/{prefix}-{num}.gz'.format(
-            prefix=prefix,num=num)
+    source = 'open-corpus/2019-09-17/{prefix}-{num}.gz'.format(
+            prefix=prefix,
+            num=str(i).zfill(3)
+            )
+
     destination = '{path}/{prefix}-{num}.gz'.format(
-            prefix=prefix,num=num)
+            path=corpus_path,
+            prefix=prefix,
+            num=str(i).zfill(3)
+            )
 
     s3 = boto3.client('s3')
-    start_time = time.perf_counter()
-    print('Downloading '+source_file + ' to ' + destination)
-    s3.download_file(
-            bucket,
-            source_file,
-            destination
-            )
-    print('Completed download in ' + str(time.perf_counter()-start_time)+'s')
+
+    if not os.path.exists(destination):
+        start_time = time.perf_counter()
+        print('Downloading from '+ source + ' to ' + destination)
+        ensure_dir(destination)
+        s3.download_file(bucket, source, destination)
+        print('Completed download in ' + str(time.perf_counter()-start_time)+'s')
+    else:
+        print(destination + ' already exists')
+
 
 def delete_json(filename):
     subprocess.call([ 'rm', '-r', filename ])
 
 def download_and_extract_json(
-        path='data/s2-corpus',
+        corpus_path='data/s2-corpus',
         prefix='s2-corpus',
-        output='data/csv',
+        csv_path='data/csv',
         start=0,
         end=0,
         compress=True):
-    for i in range(start,stop+1):
+
+    suffix = ''
+    if compress:
+        suffix = '.gz'
+
+    for i in range(start,end+1):
+
         download_from_s3(i)
-        parse_json('{dir}/{pre}-{num}'.format(
-                    dir=path,
+
+        print('compress = ' + str(compress))
+        padded_i = str(i).zfill(3)
+        json_to_csv.parse_json(
+                '{dir}/{pre}-{num}{suf}'.format(
+                    dir=corpus_path,
                     pre=prefix,
-                    num=str(i).zfill(3)),
-                output,
+                    num=padded_i,
+                    suf=suffix
+                    ),
+                csv_path,
                 make_int=False,
                 unique=True,
                 neo4j=True,
                 compress=compress
                 )
-        delete_json('{path}/{prefix}-{num}.gz'.format(
-                prefix=prefix,num=i))
+
+        #delete_json('{dir}/{prefix}-{num}{suf}'.format(
+        #        dir=corpus_path,
+        #        prefix=prefix,
+        #        num=padded_i,
+        #        suf=suffix
+        #        ))
 
 #def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,compress=False):
 
-def path_list(table,path,prefix,suffix,start,end,compress):
+def path_list(table,csv_path,prefix,suffix,start,end,compress):
     if compress:
         suffix=suffix+'.gz'
 
     return ['{dir}/{pre}-{num}-{tab}{suf}'.format(
-                dir=path,
+                dir=csv_path,
                 pre=prefix,
                 num=str(i).zfill(3),
                 tab=table,
@@ -146,11 +199,11 @@ def path_list(table,path,prefix,suffix,start,end,compress):
 
 def import_csv(files):
     start_time = time.perf_counter()
+
     with ExitStack() as stack:
         stdout_log = stack.enter_context(open('logs/import_csv.stdout','w'))
         stderr_log = stack.enter_context(open('logs/import_csv.stderr','w'))
         timer = stack.enter_context(open('logs/import_csv.timer','a+'))
-
         stdout_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import\n')
         stdout_log.write('Papers: '+ ','.join(files['papers'])+'\n')
@@ -189,10 +242,11 @@ def import_csv(files):
                 stderr=stderr_log
         )
         timer.write(','.join([
-                datetime.now().strftime("%m/%d/%Y,%H:%M:%S"),
-                str(len(files['papers'])),
-                str(time.perf_counter()-start_time)
-        ]))
+                    datetime.now().strftime("%m/%d/%Y,%H:%M:%S"),
+                    str(len(files['papers'])),
+                    str(time.perf_counter()-start_time)
+                    ])+'\n'
+                )
 
 
 if __name__ == "__main__":

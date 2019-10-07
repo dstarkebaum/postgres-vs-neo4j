@@ -47,12 +47,13 @@ def main():
     args = parse_args()
     corpus_path = os.getcwd()+'/'+args.json_src
     # Input File (1.5GB JSON)
-    src_file = os.path.basename(corpus_path)
+    #src_file = os.path.basename(corpus_path)
     make_int=args.int
     output_dir = args.path
+
     parse_json(corpus_path,
-            output_dir,
-            make_int=make_int,
+            args.path,
+            make_int=args.int,
             unique=args.unique,
             neo4j=args.neo4j,
             compress=args.compress
@@ -65,7 +66,7 @@ of the form:
 if unique=True, the name of the json src file is also included:
 /absolute/path/to/output_dir/src_file-table_name.csv
 '''
-def path(table_name, output_dir, src_file='', unique=False,compress=False):
+def path(table_name, output_dir, src_file, unique=False,compress=False):
     filename = ''
 
     if unique:
@@ -103,11 +104,19 @@ def parse_json(
     if compress:
         print('Compressing outpus files with gzip')
 
-    src_file = os.path.basename(corpus_path)
+
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     # Print status to STDOUT
+
+    compressed_input = (corpus_path.split('.')[-1] == 'gz')
+
+    src_file = os.path.basename(corpus_path)
+    if compressed_input:
+        # remove '.gz'
+        src_file = src_file[:-3]
+
 
     output_files = {t:path(t,output_dir,src_file,unique,compress) for t in tables}
 
@@ -116,7 +125,6 @@ def parse_json(
 
     # keep a count of the number of records parsed
     count = 0
-    compressed_input = (corpus_path.split('.')[-1] == 'gz')
 
     with ExitStack() as stack:
         json_in = None

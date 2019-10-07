@@ -38,8 +38,10 @@ def noo4j_connect():
 
 
 
-
+# The dash app
 app = dash.Dash()
+# The flask server
+server = app.server
 
 colors = {
     'background': '#111111',

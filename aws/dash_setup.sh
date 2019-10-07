@@ -37,6 +37,14 @@ sudo -u ubuntu sh -c 'yes | pip3 install wheel'
 sudo -u ubuntu sh -c 'yes | pip3 install dash py2neo psycopg2 gunicorn boto3 sqlalchemy'
 #sudo -u ubuntu sh -c 'yes | pip3 install dash==1.3.1, py2neo==4.3.0, psycopg2==2.8.3, gunicorn==19.9.0, boto3==1.9.243'
 
+# Next, configure NGINX sites:
+sudo rm /etc/nginx/sites-enabled/default
+sudo touch /etc/nginx/sites-available/application
+sudo ln -s /etc/nginx/sites-available/application /etc/nginx/sites-enabled/application
+sudo cp /home/ubuntu/postgres-vs-neo4j/aws/nginx/application /etc/nginx/sites-enabled/application
+# nano /etc/nginx/sites-available/
+sudo /etc/init.d/nginx restart
+
 
 # See neo4j installation page for more details:
 # https://neo4j.com/docs/operations-manual/current/installation/linux/debian/
