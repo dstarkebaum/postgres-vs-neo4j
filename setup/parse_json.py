@@ -50,7 +50,13 @@ def main():
     src_file = os.path.basename(corpus_path)
     make_int=args.int
     output_dir = args.path
-    parse_json(corpus_path, output_dir, make_int=make_int, unique=args.unique,neo4j=args.neo4j,compress=args.compress)
+    parse_json(corpus_path,
+            output_dir,
+            make_int=make_int,
+            unique=args.unique,
+            neo4j=args.neo4j,
+            compress=args.compress
+            )
 
 '''
 Combine output_dir, table_name, and src_file name into a complete (absolute) path string

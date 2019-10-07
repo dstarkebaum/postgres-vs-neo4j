@@ -5,7 +5,7 @@ import os
 from contextlib import ExitStack
 import time
 from datetime import datetime
-import parse_json.py
+from setup import parse_json
 import boto3
 
 
