@@ -30,11 +30,12 @@ sudo apt-get --yes install \
     nginx=1.14.0-0ubuntu1.6
 
 cd /home/ubuntu
-sudo -u ubuntu git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
-sudo -u ubuntu git python3 -m venv dash
-sudo -u ubuntu source dash/bin/activate
+sudo -u ubuntu git clone https://github.com/dstarkebaum/postgres-vs-neo4j.git
+#sudo -u ubuntu git python3 -m venv dash
+#sudo -u ubuntu source dash/bin/activate
 sudo -u ubuntu sh -c 'yes | pip3 install wheel'
-sudo -u ubuntu sh -c 'yes | pip3 install dash==1.3.1, py2neo==4.3.0, psycopg2==2.8.3, gunicorn==19.9.0'
+sudo -u ubuntu sh -c 'yes | pip3 install dash py2neo psycopg2 gunicorn boto3 sqlalchemy'
+#sudo -u ubuntu sh -c 'yes | pip3 install dash==1.3.1, py2neo==4.3.0, psycopg2==2.8.3, gunicorn==19.9.0, boto3==1.9.243'
 
 
 # See neo4j installation page for more details:

@@ -5,7 +5,7 @@ import sqlalchemy
 import pandas as pd
 import dash_table
 import sqlalchemy.dialects
-import py2oneo
+import py2neo
 import psycopg2
 import plotly.graph_objs as go
 
@@ -34,7 +34,7 @@ def noo4j_connect():
     return con
 
 
-postgres = postgres_connect()
+#postgres = postgres_connect()
 
 
 
