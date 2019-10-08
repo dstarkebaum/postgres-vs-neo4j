@@ -87,6 +87,11 @@ sudo cp /home/ubuntu/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/p
 # Once all of the settigs are correct, then restart the sql service
 sudo /etc/init.d/postgresql restart
 
+
+wget https://raw.githubusercontent.com/pixelb/ps_mem/master/ps_mem.py
+sudo install ps_mem.py /usr/local/bin/ps_mem
+rm ps_mem.py
+
 # Check status of database with:
 # pg_lsclusters
 

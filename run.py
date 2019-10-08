@@ -1,7 +1,9 @@
 import boto3
-import setup.populate_neo4j as pop
+#import setup.populate_neo4j as pop
+import setup.postgres_utils as pgu
 
-pop.populate_neo4j()
+pgu.main()
+#pop.populate_neo4j()
 #pop.download_from_s3()
 
 #bucket='data-atsume-arxiv'

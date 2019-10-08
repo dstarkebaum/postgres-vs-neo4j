@@ -41,10 +41,10 @@ headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)','
 
 
 host_config = {
-    HOST='localhost',
-    DATABASE='ubuntu',
-    USER='ubuntu',
-    PASSWORD='ubuntu'
+    'HOST':'localhost',
+    'DATABASE':'ubuntu',
+    'USER':'ubuntu',
+    'PASSWORD':'ubuntu'
     }
 
 
@@ -122,9 +122,9 @@ def populate_database(
             start=start,
             end=end,
             compress=compress)
-    if engine == 'neo4j'
+    if engine == 'neo4j':
         import_csv(csv_files)
-    else
+    else:
         import_postgres(csv_files)
 
 def import_portgres(csv_files):
@@ -140,11 +140,11 @@ def import_portgres(csv_files):
                         WITH (FORMAT CSV, HEADER, DELIMITER '|')
                         """.format(table=table,file=csv_files[table])
 
-load_csv "papers" "id, title, year, doi"
-load_csv "inCits" "id, inCit_id"
-load_csv "outCits" "id, outCit_id"
-load_csv "authors" "id, name"
-load_csv "paper_authors" "paper_id, author_id"
+# load_csv "papers" "id, title, year, doi"
+# load_csv "inCits" "id, inCit_id"
+# load_csv "outCits" "id, outCit_id"
+# load_csv "authors" "id, name"
+# load_csv "paper_authors" "paper_id, author_id"
 
 
     ])

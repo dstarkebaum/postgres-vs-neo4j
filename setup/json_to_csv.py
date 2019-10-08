@@ -77,13 +77,28 @@ def path(table_name, output_dir, src_file, unique=False,compress=False):
         filename = filename+'.gz'
     return(os.path.join(os.getcwd(),output_dir,filename))
 
-def write_headers(files):
-    files['papers'].write(format(['id:ID(Paper)','title','year:INT','doi',':LABEL']))
-    files['is_cited_by'].write(format(['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']))
-    files['cites'].write(format(['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']))
-    files['authors'].write(format(['id:ID(Author)','name',':LABEL']))
-    files['has_author'].write(format(['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']))
-    #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
+
+# load_csv "papers" "id, title, year, doi"
+# load_csv "inCits" "id, inCit_id"
+# load_csv "outCits" "id, outCit_id"
+# load_csv "authors" "id, name"
+# load_csv "paper_authors" "paper_id, author_id"
+
+def write_headers(files,neo4j=True):
+    if neo4j:
+        files['papers'].write(format(['id:ID(Paper)','title','year:INT','doi',':LABEL']))
+        files['is_cited_by'].write(format(['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']))
+        files['cites'].write(format(['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']))
+        files['authors'].write(format(['id:ID(Author)','name',':LABEL']))
+        files['has_author'].write(format(['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']))
+        #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
+    else:
+        files['papers'].write(format(['id','title','year','doi']))
+        files['is_cited_by'].write(format(['id','incit_id']))
+        files['cites'].write(format(['id','outcit_id']))
+        files['authors'].write(format(['id','name']))
+        files['has_author'].write(format(['paper_id','author_id']))
+        #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
 
 def parse_json(
         corpus_path,
@@ -139,8 +154,7 @@ def parse_json(
         else:
             files = { t : stack.enter_context(open(output_files[t],'w')) for t in tables}
 
-        if neo4j:
-            write_headers(files)
+        write_headers(files,neo4j)
         # Parse each line of JSON, and write the appropriate fields
         # to each csv table
         for line in json_in:

@@ -6,10 +6,10 @@ import time
 #from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 host_config = {
-    HOST='localhost',
-    DATABASE='ubuntu',
-    USER='ubuntu',
-    PASSWORD='ubuntu'
+    'HOST':'localhost',
+    'DATABASE':'david',#'ubuntu'
+    'USER':'david',#'ubuntu'
+    'PASSWORD':'david'#'ubuntu'
     }
 
 #Decorator to handle database connections.
@@ -19,10 +19,10 @@ def with_connection(f):
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
-                        h=host_config.HOST,
-                        db=host_config.DATABASE,
-                        u=host_config.USER,
-                        pw=host_config.PASSWORD)
+                        h=host_config['HOST'],
+                        db=host_config['DATABASE'],
+                        u=host_config['USER'],
+                        pw=host_config['PASSWORD'])
                 )
         try:
             return_value = f(connection, *args, **kwargs)
@@ -40,6 +40,20 @@ def with_connection(f):
 
     return with_connection_
 
+def verbose_query(cursor, query):
+    start=time.perf_counter()
+    print(cursor.mogrify(query).decode('utf-8'))
+    try:
+        cursor.execute(query)
+        for record in cursor:
+            print(str(record))
+    except (psycopg2.ProgrammingError, psycopg2.errors.DuplicateTable) as error:
+        print(error)
+
+    print("Execution time: "+str(time.perf_counter()-start))
+
+
+
 @with_connection
 def remove_duplicates(connection,table,columns):
     cursor = connection.cursor()
@@ -48,11 +62,13 @@ def remove_duplicates(connection,table,columns):
     conditions = ''.join(
             [' AND a.{c} = b.{c}'.format(c=col) for col in columns]
             )
-    cursor.execute('''
+    query = '''
             DELETE FROM {t} a USING {t} b
             WHERE a.ctid < b.ctid
             '''.format(t=table) + conditions + ';'
-            )
+
+    verbose_query(cursor, query)
+
     print(str(time.perf_counter()-start) + " s to remove duplicates " +
             "from {t}({c})".format(t=table,c=','.join(columns))
             )
@@ -73,7 +89,24 @@ def create_index(
     cursor = connection.cursor()
     start=time.perf_counter()
 
-    cols = ', '.join(columns)
+    cols=''
+
+    # https://hashrocket.com/blog/posts/exploring-postgres-gin-index
+    # CREATE INDEX table_index ON table USING gin (first_name gin_trgm_ops, last_name gin_trgm_ops);
+    gi=''
+    if gin:
+        gi=' USING GIN'
+        gin_cols = []
+        for col in columns:
+            if ('trigram'==gin_type or 'trgm'==gin_type):
+                gin_cols.append('{c} gin_trgm_ops'.format(c=col))
+            elif ('vector'==gin_type or 'vec'==gin_type):
+                gin_cols.append("to_tsvector('simple', {c})".format(c=col))
+            else:
+                print("Ignoring invalid gin_type: " + gin_type)
+        cols = ', '.join(gin_cols)
+    else:
+        cols = ', '.join(columns)
 
     index= 'index_{t}_{c_o_l}'.format(
             t=table,c_o_l='_'.join(columns)
@@ -91,24 +124,16 @@ def create_index(
     if unique:
         uni='UNIQUE '
 
-    gi=''
-    if gin:
-        if (gin_type=='trigram' or gin_type=='trgm'):
-            gi=' USING GIN({c} gin_trgm_ops)'.format(c=columns[0])
-        elif (gin_type=='vector' or gin_type=='tsvector' or gin_type=='vec'):
-            gi=' USING GIN(to_tsvector("simple",{c}))'.format(c=columns[0])
-        else:
-            print("Ignoring invalid gin_type: " + gin_type)
-
-    cursor.execute('''
-            {e}{a}CREATE {u}INDEX {i} ON {t}({c}){g};
+    query = '''
+            {e}{a}CREATE {u}INDEX {i} ON {t}{g} ({c});
             '''.format(e=exp,a=ana,u=uni,t=table,c=cols,i=index,g=gi)
-            )
 
-    print(str(time.perf_counter()-start) +
-            "s to create index on " +
-            "{t}({c})".format(t=table,c=','.join(columns))
-            )
+    verbose_query(cursor, query)
+
+    #print(str(time.perf_counter()-start) +
+    #        "s to create index on " +
+    #        "{t}({c})".format(t=table,c=','.join(columns))
+    #        )
     return index
     #if unique and primary:
     #    set_primary_key(table,index)
@@ -122,8 +147,8 @@ def set_primary_key(
         analyze=False
         ):
     cursor = connection.cursor()
-    start=time.perf_counter()
 
+    start=time.perf_counter()
     exp=''
     if explain:
         exp='EXPLAIN '
@@ -132,10 +157,12 @@ def set_primary_key(
     if analyze:
         ana='ANALYZE '
 
-    cursor.execute('''
+    query='''
     {e}{a}ALTER TABLE {t} ADD PRIMARY KEY USING INDEX {i};
     '''.format(e=exp,a=ana,t=table,i=index)
-    )
+
+    verbose_query(cursor, query)
+
     print(str(time.perf_counter()-start) +
             "s to set primary key on " +
             "{i}".format(i=index)
@@ -145,28 +172,30 @@ def set_primary_key(
 def load_csv(file,table,headers,cursor):
     delimiter = '|'
     heads = ','.join(headers)
-    cursor.execute("""
+
+    query = """
             COPY {t}({h}) FROM '{f}' DELIMITER '{d}' CSV HEADER;
             """.format(f=file,d=delimiter,t=table,h=heads)
-            )
+
+    verbose_query(cursor, query)
 
 def main():
 
-    index = create_index('authors',['id'],unique=True,primary=True,explain=True)
-    remove_duplicates('authors',['id'],explain=True)
+    remove_duplicates('authors',['id'])#,explain=True)
+    index = create_index('authors',['id'],unique=True,primary=True)#,explain=True)
     set_primary_key('authors',index)
-    create_index(cur,'papers',['id'],unique=True,primary=True)
-    create_index(cur,'paper_authors',['author_id'])
-    create_index(cur,'paper_authors',['paper_id'])
+    create_index('papers',['id'],unique=True,primary=True)
+    create_index('paper_authors',['author_id'])
+    create_index('paper_authors',['paper_id'])
 
-    remove_duplicates(cur,'incits',['id','incit_id'])
-    remove_duplicates(cur,'outcits',['id','outcit_id'])
+    remove_duplicates('incits',['id','incit_id'])
+    remove_duplicates('outcits',['id','outcit_id'])
 
-    create_index(cur,'incits',['id'])
-    create_index(cur,'outcits',['id'])
+    create_index('incits',['id'])
+    create_index('outcits',['id'])
 
-    create_index(cur,'authors',['name'],gin=True)
-    create_index(cur,'papers',['title'],gin=True,gin_type='vector')
+    create_index('authors',['name'],gin=True)
+    create_index('papers',['title'],gin=True,gin_type='vector')
 
 
 
