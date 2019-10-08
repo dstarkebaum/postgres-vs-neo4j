@@ -7,9 +7,9 @@ import time
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 host_config = {
     'HOST':'localhost',
-    'DATABASE':'david',#'ubuntu'
-    'USER':'david',#'ubuntu'
-    'PASSWORD':'david'#'ubuntu'
+    'DATABASE':'ubuntu',#'david'
+    'USER':'ubuntu',
+    'PASSWORD':'ubuntu'
     }
 
 #Decorator to handle database connections.
