@@ -32,6 +32,22 @@ import boto3
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
+headers = {}
+headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
+headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
+headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
+headers['authors'] = ['id:ID(Author)','name',':LABEL']
+headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
+
+
+host_config = {
+    HOST='localhost',
+    DATABASE='ubuntu',
+    USER='ubuntu',
+    PASSWORD='ubuntu'
+    }
+
+
 def ensure_dir(file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
@@ -69,14 +85,15 @@ def main():
         args.compress
     )
 
-def populate_neo4j(
+def populate_database(
         corpus_path='data/s2-corpus',
         csv_path='data/csv',
         prefix='s2-corpus',
         suffix='.csv',
         start=0,
         end=0,
-        compress=True):
+        compress=True,
+        engine='neo4j'):
 
     print(os.getcwd())
 
@@ -105,8 +122,33 @@ def populate_neo4j(
             start=start,
             end=end,
             compress=compress)
+    if engine == 'neo4j'
+        import_csv(csv_files)
+    else
+        import_postgres(csv_files)
 
-    import_csv(csv_files)
+def import_portgres(csv_files):
+    for table in csv_files:
+        subprocess.call([
+                'psql',
+                '-h', host_config['HOST'],
+                '-d', host_config['DATABASE'],
+                '-U', host_config['USER'],
+                '-c',   """
+                        \\copy {table}({headers})
+                        FROM {file}
+                        WITH (FORMAT CSV, HEADER, DELIMITER '|')
+                        """.format(table=table,file=csv_files[table])
+
+load_csv "papers" "id, title, year, doi"
+load_csv "inCits" "id, inCit_id"
+load_csv "outCits" "id, outCit_id"
+load_csv "authors" "id, name"
+load_csv "paper_authors" "paper_id, author_id"
+
+
+    ])
+
 
 
 # Download a single zipped json from S3
@@ -157,6 +199,7 @@ def download_and_extract_json(
     for i in range(start,end+1):
 
         download_from_s3(i)
+        start=time.perf_counter()
 
         print('compress = ' + str(compress))
         padded_i = str(i).zfill(3)
