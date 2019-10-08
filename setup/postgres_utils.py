@@ -3,12 +3,16 @@
 import psycopg2
 import os
 import time
-import host_config
+#from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
+host_config = {
+    HOST='localhost',
+    DATABASE='ubuntu',
+    USER='ubuntu',
+    PASSWORD='ubuntu'
+    }
 
-'''
-Decorator to handle database connections.
-'''
+#Decorator to handle database connections.
 def with_connection(f):
     def with_connection_(*args, **kwargs):
         # or use a pool, or a factory function...
@@ -147,21 +151,22 @@ def load_csv(file,table,headers,cursor):
             )
 
 def main():
+
     index = create_index('authors',['id'],unique=True,primary=True,explain=True)
     remove_duplicates('authors',['id'],explain=True)
     set_primary_key('authors',index)
-    #create_index(cur,'papers',['id'],unique=True,primary=True)
-    #create_index(cur,'paper_authors',['author_id'])
-    #create_index(cur,'paper_authors',['paper_id'])
+    create_index(cur,'papers',['id'],unique=True,primary=True)
+    create_index(cur,'paper_authors',['author_id'])
+    create_index(cur,'paper_authors',['paper_id'])
 
-    #remove_duplicates(cur,'incits',['id','incit_id'])
-    #remove_duplicates(cur,'outcits',['id','outcit_id'])
+    remove_duplicates(cur,'incits',['id','incit_id'])
+    remove_duplicates(cur,'outcits',['id','outcit_id'])
 
-    #create_index(cur,'incits',['id'])
-    #create_index(cur,'outcits',['id'])
+    create_index(cur,'incits',['id'])
+    create_index(cur,'outcits',['id'])
 
-    #create_index(cur,'authors',['name'],gin=True)
-    #create_index(cur,'papers',['title'],gin=True,gin_type='vector')
+    create_index(cur,'authors',['name'],gin=True)
+    create_index(cur,'papers',['title'],gin=True,gin_type='vector')
 
 
 

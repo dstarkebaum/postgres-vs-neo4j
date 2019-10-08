@@ -70,9 +70,17 @@ def with_connection(f):
                 secure=SECURE,
                 max_connections=MAX_CONNECTIONS
                 )
+
+        return_value = f(graph, *args, **kwargs)
+
+    return with_connection_
+
+def with_connection(f):
+    def with_connection_(*args, **kwargs):
+
+
         transaction = graph.begin(autocommit=False)
         try:
-            return_value = f(transaction, *args, **kwargs)
         except Exception:
             transaction.rollback()
             print(f.__name__+" failed!")
@@ -80,17 +88,20 @@ def with_connection(f):
         else:
             transaction.commit() # or maybe not
             print(f.__name__+" success!")
-        #finally:
-        #    connection.close()
-
         return return_value
 
-    return with_connection_
+def total_size(database):
+    return database.store_file_sizes['TotalStoreSize']
 
-def make_index(transaction,label,property):
-    tx.run('''
+def make_index(graph,label,properties):
+    graph.shema.create_index(label,properties)
 
-    ''')
+def make_all_indexes(graph):
+    make_index(graph,':Author','id')
+    make_index(graph,':Paper','id')
+    make_index(graph,':CITES','id')
+    make_index(graph,':Author','id')
+#tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 def delete_duplicate_relationships(transaction):
     transaction.run('''
@@ -101,6 +112,34 @@ def delete_duplicate_relationships(transaction):
             LIMIT 100000
             FOREACH (r IN TAIL(rr) | DELETE r);
             ''')
+
+def find_largest_groups():
+    q1='''
+    CALL algo.unionFind('', '',
+            {write:true, partitionProperty:"partition"}
+        ) YIELD nodes RETURN *
+    '''
+    q2='''
+    // call unionFind procedure
+CALL algo.unionFind.stream('', '', {})
+YIELD nodeId,setId
+// groupBy setId, storing all node ids of the same set id into a list
+WITH setId, collect(nodeId) as nodes
+// order by the size of nodes list descending
+ORDER BY size(nodes) DESC
+LIMIT 3 // limiting to 3
+RETURN setId, nodes
+    '''
+
+#// call unionFind procedure
+#CALL algo.unionFind.stream('', '', {})
+#YIELD nodeId,setId
+#// groupBy setId, storing all node ids of the same set id into a list
+#WITH setId, collect(nodeId) as nodes
+#// order by the size of nodes list descending
+#ORDER BY size(nodes) DESC
+#LIMIT 3 // limiting to 3
+#RETURN setId, nodes
 
 
 def load_nodes_from_csv(transaction,filename,label):
