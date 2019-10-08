@@ -45,6 +45,15 @@ sudo cp /home/ubuntu/postgres-vs-neo4j/aws/nginx/application /etc/nginx/sites-en
 # nano /etc/nginx/sites-available/
 sudo /etc/init.d/nginx restart
 
+# Finally, navigate to the folder containing your dash app
+# Identify the module name (python file... also be sure to include __init__.py!)
+# and the variable inside the module that points to the Flask Server
+# NOTE: if you are using Dash only, you can access the flask server by:
+# app = Dash()
+# server = app.server <-- This is the flask app
+# then call: gunicorn my_python_file:flask_app_variable_name
+cd /home/ubuntu/postgres-vs-neo4j/dash
+sudo -u ubuntu gunicorn dash_app:server
 
 # See neo4j installation page for more details:
 # https://neo4j.com/docs/operations-manual/current/installation/linux/debian/
