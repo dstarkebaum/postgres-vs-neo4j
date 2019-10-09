@@ -178,7 +178,6 @@ def verbose_query(graph, query):
     transaction = graph.begin(autocommit=False)
     try:
         cursor = transaction.run(query)
-        transaction.commit()
     except Exception as e:
         transaction.rollback()
         print(e)

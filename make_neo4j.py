@@ -25,10 +25,11 @@ pop.populate_database(
         prefix='s2-corpus',
         suffix='.csv',
         start=0,
-        end=1,
+        end=176,
         compress=False,
         engine='neo4j',
-        testing=False)
+        testing=False,
+        cache=False)
 
 #pop.populate_neo4j()
 #pop.download_from_s3()
