@@ -6,6 +6,7 @@ from contextlib import ExitStack
 import time
 from datetime import datetime
 from setup import json_to_csv
+from setup import postgres_utils
 import boto3
 
 
@@ -32,12 +33,12 @@ import boto3
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
-headers = {}
-headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
-headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
-headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
-headers['authors'] = ['id:ID(Author)','name',':LABEL']
-headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
+neo4j_headers = {}
+neo4j_headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
+neo4j_headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
+neo4j_headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
+neo4j_headers['authors'] = ['id:ID(Author)','name',':LABEL']
+neo4j_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
 
 
 host_config = {
@@ -258,38 +259,40 @@ def import_csv(files):
 
         stderr_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import')
-
-
-        subprocess.call([
-                    'neo4j-admin',
-                    'import',
-                    '--ignore-duplicate-nodes',
-                    '--ignore-missing-nodes',
-                    '--delimiter',
-                    '|',
-                    '--report-file=logs/neo4j.report',
-                    '--nodes:Paper',
-                    ','.join(files['papers']),
-                    '--nodes:Author',
-                    ','.join(files['authors']),
-                    '--relationships:CITES',
-                    ','.join(files['cites']),
-                    '--relationships:IS_CITED_BY',
-                    ','.join(files['is_cited_by']),
-                    '--relationships:HAS_AUTHOR',
-                    ','.join(files['has_author'])
-                    #'--relationships:IS_AUTHOR_OF',
-                    #','.join(files['is_author_of'])
-                ],
-                stdout=stdout_log,
-                stderr=stderr_log
-        )
+        neo4j_admin_import(files,stdout_log,stderr_log)
         timer.write(','.join([
                     datetime.now().strftime("%m/%d/%Y,%H:%M:%S"),
                     str(len(files['papers'])),
                     str(time.perf_counter()-start_time)
                     ])+'\n'
                 )
+
+
+def neo4j_admin_import(files, stdout_log,stderr_log):
+    subprocess.call([
+                'neo4j-admin',
+                'import',
+                '--ignore-duplicate-nodes',
+                '--ignore-missing-nodes',
+                '--delimiter',
+                '|',
+                '--report-file=logs/neo4j.report',
+                '--nodes:Paper',
+                ','.join(files['papers']),
+                '--nodes:Author',
+                ','.join(files['authors']),
+                '--relationships:CITES',
+                ','.join(files['cites']),
+                '--relationships:IS_CITED_BY',
+                ','.join(files['is_cited_by']),
+                '--relationships:HAS_AUTHOR',
+                ','.join(files['has_author'])
+                #'--relationships:IS_AUTHOR_OF',
+                #','.join(files['is_author_of'])
+            ],
+            stdout=stdout_log,
+            stderr=stderr_log
+    )
 
 
 if __name__ == "__main__":

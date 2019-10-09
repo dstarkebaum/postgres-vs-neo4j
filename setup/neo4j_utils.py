@@ -18,7 +18,17 @@ MAX_CONNECTIONS=40
 
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
-
+def start_connection():
+    graph = py2neo.Graph(
+        host=HOST,
+        user=USER,
+        password=PASSWORD,
+        port=PORT,
+        scheme=SCHEME,
+        secure=SECURE,
+        max_connections=MAX_CONNECTIONS
+        )
+    return graph
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -44,6 +54,7 @@ def main():
     files = {t : path_list(t,args.path,args.prefix,args.suffix,args.start,args.end,args.compress) for t in tables}
     import_csv(files)
 
+
 def path_list(table,path,prefix,suffix,start,end,compress):
     if compress:
         suffix=suffix+'.gz'
@@ -55,28 +66,26 @@ def path_list(table,path,prefix,suffix,start,end,compress):
             suf=suffix)
             for x in range(start,end+1)]
 
-'''
-Decorator to handle database connections.
-'''
-def with_connection(f):
-    def with_connection_(*args, **kwargs):
-        return_value = None
-        # or use a pool, or a factory function...
-        graph = py2neo.Graph(
-                host=HOST,
-                user=USER,
-                password=PASSWORD,
-                port=PORT,
-                scheme=SCHEME,
-                secure=SECURE,
-                max_connections=MAX_CONNECTIONS
-                )
-
-        return_value = f(graph, *args, **kwargs)
-        return return_value
-
-    return with_connection_
-
+#Decorator to handle database connections.
+# def with_connection(f):
+#     def with_connection_(*args, **kwargs):
+#         return_value = None
+#         # or use a pool, or a factory function...
+#         graph = py2neo.Graph(
+#                 host=HOST,
+#                 user=USER,
+#                 password=PASSWORD,
+#                 port=PORT,
+#                 scheme=SCHEME,
+#                 secure=SECURE,
+#                 max_connections=MAX_CONNECTIONS
+#                 )
+#
+#         return_value = f(graph, *args, **kwargs)
+#         return return_value
+#
+#     return with_connection_
+#
 # def safe_commit(f):
 #     def safe_commit_(*args, **kwargs):
 #
@@ -94,20 +103,50 @@ def with_connection(f):
 #         return return_value
 #
 #     return safe_commit_
+#
+# @with_connection
+
+
+def verbose_query(graph, query):
+    start=time.perf_counter()
+    print(query)
+
+    transation = graph.begin(autocommit=False)
+
+    try:
+        return_value = f(transaction, *args, **kwargs)
+    except Exception as e:
+        transaction.rollback()
+        print(e)
+        return None
+    else:
+        transaction.commit() # or maybe not
+    return return_value
+
+    cursor = graph.run(query):
+    print("Execution time: "+str(time.perf_counter()-start))
+
 
 def total_size(database):
     return database.store_file_sizes['TotalStoreSize']
 
+
 def make_index(graph,label,properties):
+    start=time.perf_counter()
+    print("Making index on :"+label+' ('+','.join(properties)+')')
+
     graph.shema.create_index(label,properties)
 
-@with_connection
+    print("Execution time: "+str(time.perf_counter()-start))
+
+#make_index(graph,label,property):
+#    query='''CREATE INDEX ON :{l}({p})'''.format(l=label,p=property)
+
+
 def make_all_indexes(graph):
 
-    make_index(graph,':Author','id')
-    make_index(graph,':Paper','id')
-    make_index(graph,':CITES','id')
-    make_index(graph,':Author','id')
+    make_index(graph,':Author',['id(Author)'])
+    make_index(graph,':Paper',['id(Paper)'])
 #tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 
@@ -120,6 +159,75 @@ def delete_duplicate_relationships(transaction):
             LIMIT 100000
             FOREACH (r IN TAIL(rr) | DELETE r);
             ''')
+
+def make_cypher_queries(
+        files,
+        period=500,
+        rows=100
+    ):
+    cypher = {}
+    periodic_commit = ''
+
+    if period > 0:
+        periodic_commit = 'USING PERIODIC COMMIT {p}'.format(p=period)
+
+    row_limit = ''
+    if rows > 0:
+        row_limit = 'WITH row limit {r}'.format(r=rows)
+
+
+    cypher['constraints']='''
+        CREATE CONSTRAINT ON (p:Paper) ASSERT p.id(Paper) IS UNIQUE;
+        CREATE CONSTRAINT ON (a:Author) ASSERT a.id(Author) IS UNIQUE;
+    '''
+    cypher['paper']='''
+        {per}
+        LOAD CSV WITH HEADERS FROM "{filename}" AS row
+        {with}
+        MERGE (p:Paper {{ id(Paper):row[0] }}
+        ON CREATE SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
+        ON CREATE SET p.title = CASE trim(row.year) WHEN "" THEN null ELSE row.year END
+        ON CREATE SET p.title = CASE trim(row.doi) WHEN "" THEN null ELSE row.doi END
+    '''.format(per=periodic_commit,with=row_limit,filename=files['papers'])
+
+    cypher['author']='''
+        {per}
+        LOAD CSV WITH HEADERS FROM "{filename}" AS row
+        {with}
+        MERGE (a:Author {{ id(Author):row[0] }}
+        ON CREATE SET a.name = CASE trim(row.name) WHEN "" THEN null ELSE row.name END
+    '''.format(per=periodic_commit,with=row_limit,filename=files['authors'])
+
+    cypher['cites']='''
+        {per}
+        LOAD CSV WITH HEADERS FROM "{filename}" AS row
+        {with}
+        MATCH (p1:Paper {{id(Paper):row[0]}}),(p2:Paper {{id(Paper):row[1]}})
+        MERGE (p1)->[:CITES]-(p2)
+    '''.format(per=periodic_commit,with=row_limit,filename=files['cites'])
+
+    cypher['is_cited_by']='''
+        {per}
+        LOAD CSV WITH HEADERS FROM "{filename}" AS row
+        {with}
+        MATCH (p1:Paper {{id(Paper):row[0]}}),(p2:Paper {{id(Paper):row[1]}})
+        MERGE (p1)->[:IS_CITED_BY]-(p2)
+    '''.format(per=periodic_commit,with=row_limit,filename=files['is_cited_by'])
+
+    cypher['has_author']='''
+        {per}
+        LOAD CSV WITH HEADERS FROM "{filename}" AS row
+        {with}
+        MATCH (p:Paper {{id(Paper):row[0]}}),(a:Author {{id(Author):row[1]}})
+        MERGE (p1)->[:HAS_AUTHOR]-(p2)
+    '''.format(per=periodic_commit,with=row_limit,filename=files['is_cited_by'])
+
+    return cypher
+
+def import_csv(files):
+    cypher = make_cypher_queries(files):
+    for query in cypher:
+        verbose_query(query)
 
 # def find_largest_groups():
 #     q1='''
@@ -149,13 +257,26 @@ def delete_duplicate_relationships(transaction):
 #LIMIT 3 // limiting to 3
 #RETURN setId, nodes
 
+# neo4j_headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
+# neo4j_headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
+# neo4j_headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
+# neo4j_headers['authors'] = ['id:ID(Author)','name',':LABEL']
+# neo4j_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
 
-# def load_nodes_from_csv(transaction,filename,label):
-#     q1='''
-#             LOAD CSV WITH HEADERS FROM {filename} AS row
-#             MERGE (l:{label} { id: row.id }
-#             ON CREATE SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
-#         '''
+    # create_index('papers',['id'],unique=True,primary=True)
+    # create_index('paper_authors',['author_id'])
+    # create_index('paper_authors',['paper_id'])
+    #
+    # remove_duplicates('incits',['id','incit_id'])
+    # remove_duplicates('outcits',['id','outcit_id'])
+    #
+    # create_index('incits',['id'])
+    # create_index('outcits',['id'])
+    #
+    # create_index('authors',['name'],gin=True)
+    # create_index('papers',['title'],gin=True,gin_type='vector')
+
+
 #     q2='''
 #             MATCH (a:{start_label})-[r:{rel_type}]->(b:{end_label})
 #             WHERE a.id = line["START_ID"]

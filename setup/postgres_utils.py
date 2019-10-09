@@ -5,12 +5,20 @@ import os
 import time
 #from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
-host_config = {
+postgres_host_config = {
     'HOST':'localhost',
     'DATABASE':'ubuntu',#'david'
     'USER':'ubuntu',
     'PASSWORD':'ubuntu'
     }
+
+postgres_headers = {}
+postgres_headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
+postgres_headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
+postgres_headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
+postgres_headers['authors'] = ['id:ID(Author)','name',':LABEL']
+postgres_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
+
 
 #Decorator to handle database connections.
 def with_connection(f):
@@ -19,10 +27,10 @@ def with_connection(f):
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
-                        h=host_config['HOST'],
-                        db=host_config['DATABASE'],
-                        u=host_config['USER'],
-                        pw=host_config['PASSWORD'])
+                        h=postgres_host_config['HOST'],
+                        db=postgres_host_config['DATABASE'],
+                        u=postgres_host_config['USER'],
+                        pw=postgres_host_config['PASSWORD'])
                 )
         try:
             return_value = f(connection, *args, **kwargs)
@@ -180,6 +188,18 @@ def load_csv(file,table,headers,cursor):
     verbose_query(cursor, query)
 
 def main():
+    create_all_indexes()
+
+
+def creat_all_indexes():
+
+    # TODO --> DONE: Create index on authors and paper_authors and remove duplicate rows
+    # get list of tables and columns in schema
+    #'''select table_schema, table_name, column_name
+    #from information_schema.columns
+    #where table_schema not in ('pg_catalog','information_schema')
+    #order by 1,2,3
+
 
     remove_duplicates('authors',['id'])#,explain=True)
     index = create_index('authors',['id'],unique=True,primary=True)#,explain=True)
@@ -198,6 +218,10 @@ def main():
     create_index('papers',['title'],gin=True,gin_type='vector')
 
 
+
+
+
+#def load_tables():
 
     #pw = input('enter database password for david: ')
     # options for tables include:
@@ -221,13 +245,6 @@ def main():
     #load_csv(outCit_csv,'outCits',['id','outCit_id'],cursor)
     #load_csv(authors_csv,'temp_authors',['id','name'],cursor)
     #load_csv(paper_authors_csv,'paper_authors',['paper_id','author_id'],cursor)
-
-    # TODO: Create index on authors and paper_authors and remove duplicate rows
-    # get list of tables and columns in schema
-    #'''select table_schema, table_name, column_name
-    #from information_schema.columns
-    #where table_schema not in ('pg_catalog','information_schema')
-    #order by 1,2,3
 
 
 if __name__ == "__main__":
