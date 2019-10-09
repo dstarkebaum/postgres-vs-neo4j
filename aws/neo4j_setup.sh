@@ -32,7 +32,7 @@ sudo wget --no-check-certificate -O - https://debian.neo4j.org/neotechnology.gpg
 sudo echo 'deb http://debian.neo4j.org/repo stable/' | sudo tee /etc/apt/sources.list.d/neo4j.list
 sudo apt-get --yes update
 
-sudo apt-get --yes install neo4j==3.5.11
+sudo apt-get --yes install neo4j #==3.5.11
 
 # download Graph algorithm and APOC plugins into /var/lib/neo4j/plugins
 wget https://s3-eu-west-1.amazonaws.com/com.neo4j.graphalgorithms.dist/neo4j-graph-algorithms-3.5.11.0-standalone.zip;
