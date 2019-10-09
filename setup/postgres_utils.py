@@ -5,9 +5,10 @@ import os
 import time
 #from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
-postgres_host_config = {
+
+host_config = {
     'HOST':'localhost',
-    'DATABASE':'ubuntu',#'david'
+    'DATABASE':'ubuntu',
     'USER':'ubuntu',
     'PASSWORD':'ubuntu'
     }
@@ -47,6 +48,7 @@ def with_connection(f):
         return return_value
 
     return with_connection_
+
 
 def verbose_query(cursor, query):
     start=time.perf_counter()
@@ -187,9 +189,6 @@ def load_csv(file,table,headers,cursor):
 
     verbose_query(cursor, query)
 
-def main():
-    create_all_indexes()
-
 
 def creat_all_indexes():
 
@@ -220,6 +219,20 @@ def creat_all_indexes():
 
 
 
+def psql_import(csv_files):
+    for table in csv_files:
+        subprocess.call([
+                'psql',
+                '-h', host_config['HOST'],
+                '-d', host_config['DATABASE'],
+                '-U', host_config['USER'],
+                '-c',   """
+                        \\copy {table}({headers})
+                        FROM {file}
+                        WITH (FORMAT CSV, HEADER, DELIMITER '|')
+                        """.format(table=table,file=csv_files[table])
+    ])
+
 
 #def load_tables():
 
@@ -246,6 +259,8 @@ def creat_all_indexes():
     #load_csv(authors_csv,'temp_authors',['id','name'],cursor)
     #load_csv(paper_authors_csv,'paper_authors',['paper_id','author_id'],cursor)
 
+def main():
+    pass
 
 if __name__ == "__main__":
     main()

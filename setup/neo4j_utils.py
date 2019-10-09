@@ -16,8 +16,16 @@ SCHEME='bolt',
 SECURE=False,
 MAX_CONNECTIONS=40
 
+neo4j_headers = {}
+neo4j_headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
+neo4j_headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
+neo4j_headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
+neo4j_headers['authors'] = ['id:ID(Author)','name',':LABEL']
+neo4j_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
+
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
+
 def start_connection():
     graph = py2neo.Graph(
         host=HOST,
@@ -29,42 +37,6 @@ def start_connection():
         max_connections=MAX_CONNECTIONS
         )
     return graph
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('path',type=str,
-            help='Directory of the parsed csv files')
-    parser.add_argument('--start',type=int,default=0,
-            help='file number to start with')
-    parser.add_argument('--end',type=int,default=0,
-            help='file number to start with')
-    parser.add_argument('--prefix',type=str,default='s2-corpus',
-            help='filename prefix for csv files')
-    parser.add_argument('--suffix',type=str,default='.csv',
-            help='filename prefix for csv files')
-    parser.add_argument('--compress', action='store_true',
-            help='choose if the source file is compressed (gz)')
-
-    return parser.parse_args()
-
-def main():
-    args = parse_args()
-    print(os.getcwd())
-    files = {t : path_list(t,args.path,args.prefix,args.suffix,args.start,args.end,args.compress) for t in tables}
-    import_csv(files)
-
-
-def path_list(table,path,prefix,suffix,start,end,compress):
-    if compress:
-        suffix=suffix+'.gz'
-    return ['{dir}/{pre}-{num}-{tab}{suf}'.format(
-            dir=path,
-            pre=prefix,
-            num=str(x).zfill(3),
-            tab=table,
-            suf=suffix)
-            for x in range(start,end+1)]
 
 #Decorator to handle database connections.
 # def with_connection(f):
@@ -180,6 +152,7 @@ def make_cypher_queries(
         CREATE CONSTRAINT ON (p:Paper) ASSERT p.id(Paper) IS UNIQUE;
         CREATE CONSTRAINT ON (a:Author) ASSERT a.id(Author) IS UNIQUE;
     '''
+
     cypher['paper']='''
         {per}
         LOAD CSV WITH HEADERS FROM "{filename}" AS row
@@ -224,10 +197,65 @@ def make_cypher_queries(
 
     return cypher
 
-def import_csv(files):
+# This import loads one group of files at a time
+def cypher_import(files):
+
     cypher = make_cypher_queries(files):
+
     for query in cypher:
         verbose_query(query)
+
+
+# This import requires a complete dictionary of files all at once
+# stored locally on disk, and is likely to run out of RAM for large imports
+def admin_import(dict_of_csv_files):
+    start_time = time.perf_counter()
+
+    with ExitStack() as stack:
+        stdout_log = stack.enter_context(open('logs/import_csv.stdout','w'))
+        stderr_log = stack.enter_context(open('logs/import_csv.stderr','w'))
+        timer = stack.enter_context(open('logs/import_csv.timer','a+'))
+        stdout_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+                ' Starting neo4j-admin import\n')
+        stdout_log.write('Papers: '+ ','.join(dict_of_csv_files['papers'])+'\n')
+        stdout_log.write('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
+        stdout_log.write('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
+        stdout_log.write('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
+        stdout_log.write('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
+        #stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
+
+        stderr_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+                ' Starting neo4j-admin import')
+
+        bash_commands= [
+                    'neo4j-admin',
+                    'import',
+                    '--ignore-duplicate-nodes',
+                    '--ignore-missing-nodes',
+                    '--delimiter', '|',
+                    '--report-file=logs/neo4j.report',
+                    '--nodes:Paper', ','.join(dict_of_csv_files['papers']),
+                    '--nodes:Author', ','.join(dict_of_csv_files['authors']),
+                    '--relationships:CITES', ','.join(dict_of_csv_files['cites']),
+                    '--relationships:IS_CITED_BY', ','.join(dict_of_csv_files['is_cited_by']),
+                    '--relationships:HAS_AUTHOR', ','.join(dict_of_csv_files['has_author'])
+                    #'--relationships:IS_AUTHOR_OF',
+                    #','.join(files['is_author_of'])
+                    ]
+
+        print(' 'join(bash_commands))
+        subprocess.call(
+                bash_commands,
+                stdout=stdout_log,
+                stderr=stderr_log
+                )
+
+        timer.write(','.join([
+                    datetime.now().strftime("%m/%d/%Y,%H:%M:%S"),
+                    str(len(dict_of_csv_files['papers'])),
+                    str(time.perf_counter()-start_time)
+                    ])+'\n'
+                )
 
 # def find_largest_groups():
 #     q1='''
@@ -288,6 +316,43 @@ def import_csv(files):
 #             DELETE t
 #         '''
 
+
+# DEPRACATED: redundant with json_to_csv.absolute_path
+def path_list(table,path,prefix,suffix,start,end,compress):
+    if compress:
+        suffix=suffix+'.gz'
+    return ['{dir}/{pre}-{num}-{tab}{suf}'.format(
+            dir=path,
+            pre=prefix,
+            num=str(x).zfill(3),
+            tab=table,
+            suf=suffix)
+            for x in range(start,end+1)]
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('path',type=str,
+            help='Directory of the parsed csv files')
+    parser.add_argument('--start',type=int,default=0,
+            help='file number to start with')
+    parser.add_argument('--end',type=int,default=0,
+            help='file number to start with')
+    parser.add_argument('--prefix',type=str,default='s2-corpus',
+            help='filename prefix for csv files')
+    parser.add_argument('--suffix',type=str,default='.csv',
+            help='filename prefix for csv files')
+    parser.add_argument('--compress', action='store_true',
+            help='choose if the source file is compressed (gz)')
+
+    return parser.parse_args()
+
+def main():
+    pass
+#    args = parse_args()
+#    print(os.getcwd())
+#    files = {t : path_list(t,args.path,args.prefix,args.suffix,args.start,args.end,args.compress) for t in tables}
+#    import_csv(files)
 
 if __name__ == "__main__":
     main()
