@@ -10,9 +10,10 @@ import py2neo
 
 HOST='localhost',
 USER='neo4j',
-PASSWORD='password',
-PORT=7687,
-SCHEME='bolt',
+PASSWORD='ubuntu',
+AUTH=(USER,PASSWORD)
+PORT=7473#7687,
+SCHEME='http'#'bolt',
 SECURE=False,
 MAX_CONNECTIONS=40
 
@@ -27,15 +28,16 @@ neo4j_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Auth
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 def start_connection():
-    graph = py2neo.Graph(
-        host=HOST,
-        user=USER,
-        password=PASSWORD,
-        port=PORT,
-        scheme=SCHEME,
-        secure=SECURE,
-        max_connections=MAX_CONNECTIONS
-        )
+    graph = py2neo.Graph(password='ubuntu')
+        # auth=AUTH,
+        # host=HOST,
+        # user=USER,
+        # password=PASSWORD,
+        # port=PORT,
+        # scheme=SCHEME
+        # #secure=SECURE,
+        # #max_connections=MAX_CONNECTIONS
+        # )
     return graph
 
 #Decorator to handle database connections.
@@ -78,64 +80,31 @@ def start_connection():
 #
 # @with_connection
 
+# This import loads one group of files at a time
+def cypher_import(files):
 
-def verbose_query(graph, query):
-    start=time.perf_counter()
-    print(query)
+    cypher = make_cypher_queries(files)
 
-    transation = graph.begin(autocommit=False)
+    graph = start_connection()
+    transaction = graph.begin(autocommit=False)
 
-    try:
-        return_value = f(transaction, *args, **kwargs)
-    except Exception as e:
-        transaction.rollback()
-        print(e)
-        return None
-    else:
-        transaction.commit() # or maybe not
-    return return_value
+    # make nodes
+    verbose_query(transaction,cypher['paper'])
+    verbose_query(transaction,cypher['author'])
 
-    cursor = graph.run(query):
-    print("Execution time: "+str(time.perf_counter()-start))
+    # make relations
+    verbose_query(transaction,cypher['cites'])
+    verbose_query(transaction,cypher['is_cited_by'])
+    verbose_query(transaction,cypher['has_author'])
 
+    delete_duplicate_relationships(transaction)
+    transaction.commit() # or maybe not
 
-def total_size(database):
-    return database.store_file_sizes['TotalStoreSize']
-
-
-def make_index(graph,label,properties):
-    start=time.perf_counter()
-    print("Making index on :"+label+' ('+','.join(properties)+')')
-
-    graph.shema.create_index(label,properties)
-
-    print("Execution time: "+str(time.perf_counter()-start))
-
-#make_index(graph,label,property):
-#    query='''CREATE INDEX ON :{l}({p})'''.format(l=label,p=property)
-
-
-def make_all_indexes(graph):
-
-    make_index(graph,':Author',['id(Author)'])
-    make_index(graph,':Paper',['id(Paper)'])
-#tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
-
-
-def delete_duplicate_relationships(transaction):
-    transaction.run('''
-            MATCH (a)-[r]->(b)
-            WITH a, b, COLLECT(r) AS rr
-            WHERE SIZE(rr) > 1
-            WITH rr
-            LIMIT 100000
-            FOREACH (r IN TAIL(rr) | DELETE r);
-            ''')
 
 def make_cypher_queries(
         files,
-        period=500,
-        rows=100
+        period=0,
+        rows=0
     ):
     cypher = {}
     periodic_commit = ''
@@ -148,62 +117,119 @@ def make_cypher_queries(
         row_limit = 'WITH row limit {r}'.format(r=rows)
 
 
-    cypher['constraints']='''
-        CREATE CONSTRAINT ON (p:Paper) ASSERT p.id(Paper) IS UNIQUE;
-        CREATE CONSTRAINT ON (a:Author) ASSERT a.id(Author) IS UNIQUE;
-    '''
+#    cypher['constraints']='''
+#        CREATE CONSTRAINT ON (p:Paper) ASSERT p.id(Paper) IS UNIQUE;
+#        CREATE CONSTRAINT ON (a:Author) ASSERT a.id(Author) IS UNIQUE;
+#    '''
 
     cypher['paper']='''
         {per}
         LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        {with}
-        MERGE (p:Paper {{ id(Paper):row[0] }}
+        FIELDTERMINATOR '|'
+        {lim}
+        MERGE (p:Paper {{ id:"row.id" }})
         ON CREATE SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
-        ON CREATE SET p.title = CASE trim(row.year) WHEN "" THEN null ELSE row.year END
-        ON CREATE SET p.title = CASE trim(row.doi) WHEN "" THEN null ELSE row.doi END
-    '''.format(per=periodic_commit,with=row_limit,filename=files['papers'])
+        ON CREATE SET p.year = CASE trim(row.year) WHEN "" THEN null ELSE row.year END
+        ON CREATE SET p.doi = CASE trim(row.doi) WHEN "" THEN null ELSE row.doi END
+    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['papers'])
 
     cypher['author']='''
         {per}
         LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        {with}
-        MERGE (a:Author {{ id(Author):row[0] }}
+        FIELDTERMINATOR '|'
+        {lim}
+        MERGE (a:Author {{ id:"row.id" }})
         ON CREATE SET a.name = CASE trim(row.name) WHEN "" THEN null ELSE row.name END
-    '''.format(per=periodic_commit,with=row_limit,filename=files['authors'])
+    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['authors'])
 
     cypher['cites']='''
         {per}
         LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        {with}
-        MATCH (p1:Paper {{id(Paper):row[0]}}),(p2:Paper {{id(Paper):row[1]}})
-        MERGE (p1)->[:CITES]-(p2)
-    '''.format(per=periodic_commit,with=row_limit,filename=files['cites'])
+        FIELDTERMINATOR '|'
+        {lim}
+        MATCH (p1:Paper {{id:"row.id"}}),(p2:Paper {{id:"row.cites_id"}})
+        MERGE (p1)-[:CITES]->(p2)
+    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['cites'])
 
     cypher['is_cited_by']='''
         {per}
         LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        {with}
-        MATCH (p1:Paper {{id(Paper):row[0]}}),(p2:Paper {{id(Paper):row[1]}})
-        MERGE (p1)->[:IS_CITED_BY]-(p2)
-    '''.format(per=periodic_commit,with=row_limit,filename=files['is_cited_by'])
+        FIELDTERMINATOR '|'
+        {lim}
+        MATCH (p1:Paper {{id:"row.id"}}),(p2:Paper {{id:"row.incit_id"}})
+        MERGE (p1)-[:IS_CITED_BY]->(p2)
+    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['is_cited_by'])
 
     cypher['has_author']='''
         {per}
         LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        {with}
-        MATCH (p:Paper {{id(Paper):row[0]}}),(a:Author {{id(Author):row[1]}})
-        MERGE (p1)->[:HAS_AUTHOR]-(p2)
-    '''.format(per=periodic_commit,with=row_limit,filename=files['is_cited_by'])
+        FIELDTERMINATOR '|'
+        {lim}
+        MATCH (p:Paper {{id:"row.id"}}),(a:Author {{id:"row.outcit_id"}})
+        MERGE (p1)-[:HAS_AUTHOR]->(p2)
+    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['has_author'])
 
     return cypher
 
-# This import loads one group of files at a time
-def cypher_import(files):
 
-    cypher = make_cypher_queries(files):
+def verbose_query(transaction, query):
 
-    for query in cypher:
-        verbose_query(query)
+    start=time.perf_counter()
+
+    print(query)
+
+    cursor = transaction.run(query)
+    print("Execution time: "+str(time.perf_counter()-start))
+
+    return cursor
+
+    # transation = graph.begin(autocommit=False)
+    #
+    # try:
+    #     cursor = graph.run(query)
+    # except Exception as e:
+    #     transaction.rollback()
+    #     print(e)
+    #     return None
+    # finally:
+    #     transaction.commit() # or maybe not
+    #     print("Execution time: "+str(time.perf_counter()-start))
+
+
+def total_size(database):
+    return database.store_file_sizes['TotalStoreSize']
+
+
+def make_index(graph,label,properties):
+    start=time.perf_counter()
+    print("Making index on :"+label+' ('+properties+')')
+
+    graph.schema.create_index(label,properties)
+
+    print("Execution time: "+str(time.perf_counter()-start))
+
+#make_index(graph,label,property):
+#    query='''CREATE INDEX ON :{l}({p})'''.format(l=label,p=property)
+
+
+def make_all_indexes():
+    graph = start_connection()
+    make_index(graph,'Author',('id'))
+    make_index(graph,'Paper',('id'))
+#tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
+
+
+def delete_duplicate_relationships(transaction):
+    query = '''
+            MATCH (a)-[r]->(b)
+            WITH a, b, COLLECT(r) AS rr
+            WHERE SIZE(rr) > 1
+            WITH rr
+            LIMIT 100000
+            FOREACH (r IN TAIL(rr) | DELETE r);
+            '''
+    verbose_query(transaction,query)
+
 
 
 # This import requires a complete dictionary of files all at once
@@ -243,7 +269,7 @@ def admin_import(dict_of_csv_files):
                     #','.join(files['is_author_of'])
                     ]
 
-        print(' 'join(bash_commands))
+        print(' '.join(bash_commands))
         subprocess.call(
                 bash_commands,
                 stdout=stdout_log,

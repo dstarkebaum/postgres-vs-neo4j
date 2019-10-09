@@ -27,6 +27,10 @@ If it is running:
 `sudo neo4j stop`
 Then delete (or backup) the current database:
 `sudo rm -r /var/lib/neo4j/data/databases/graph.db`
+You may also need to modify the neo4j configuration file:
+`sudo nano /etc/neo4j/neo4j.conf`
+Check the log files for problems:
+`sudo nano /var/log/neo4j/neo4j.log`
 
 Ex: import just one set of compressed csv files in data/csv/s2-corpus-000-[table].csv.gz:
 `sudo python3 setup/populated_database.py --compress --start 0 --end 0`

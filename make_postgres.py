@@ -1,8 +1,19 @@
-import boto3
-#import setup.populate_neo4j as pop
+
+import setup.populate_database as pop
 import setup.postgres_utils as pgu
 
 pgu.main()
+pop.populate_database(
+        corpus_path='data/s2-corpus',
+        csv_path='data/csv',
+        prefix='s2-corpus',
+        suffix='.csv',
+        start=0,
+        end=2,
+        compress=True,
+        engine='psql',
+        testing=True)
+
 #pop.populate_neo4j()
 #pop.download_from_s3()
 

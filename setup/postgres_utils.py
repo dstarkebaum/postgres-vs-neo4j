@@ -3,6 +3,8 @@
 import psycopg2
 import os
 import time
+import subprocess
+
 #from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 
@@ -13,12 +15,12 @@ host_config = {
     'PASSWORD':'ubuntu'
     }
 
-postgres_headers = {}
-postgres_headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
-postgres_headers['is_cited_by'] = ['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']
-postgres_headers['cites'] = ['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']
-postgres_headers['authors'] = ['id:ID(Author)','name',':LABEL']
-postgres_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']
+headers = {}
+headers['papers'] = ('id','title','year','doi')
+headers['is_cited_by'] = ('id','incit_id')
+headers['cites'] = ('id','outcit_id')
+headers['authors'] = ('id','name')
+headers['has_author'] = ('paper_id','author_id')
 
 
 #Decorator to handle database connections.
@@ -28,10 +30,10 @@ def with_connection(f):
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
-                        h=postgres_host_config['HOST'],
-                        db=postgres_host_config['DATABASE'],
-                        u=postgres_host_config['USER'],
-                        pw=postgres_host_config['PASSWORD'])
+                        h=host_config['HOST'],
+                        db=host_config['DATABASE'],
+                        u=host_config['USER'],
+                        pw=host_config['PASSWORD'])
                 )
         try:
             return_value = f(connection, *args, **kwargs)
@@ -230,8 +232,8 @@ def psql_import(csv_files):
                         \\copy {table}({headers})
                         FROM {file}
                         WITH (FORMAT CSV, HEADER, DELIMITER '|')
-                        """.format(table=table,file=csv_files[table])
-    ])
+                        """.format(table=table,file=csv_files[table], headers=", ".join(headers[table]))
+        ])
 
 
 #def load_tables():

@@ -71,7 +71,9 @@ def populate_database(
         start=0,
         end=0,
         compress=True,
-        engine='neo4j'):
+        engine='neo4j',
+        testing=True,
+        cache=True):
 
     print(os.getcwd())
 
@@ -84,24 +86,34 @@ def populate_database(
     #missing_file = False
 
     # loop through the list of normalized tables in our database
-    for table in tables:
 
-        for i in range(start, end+1)
+    for i in range(start, end+1):
 
-            csv_files[ table ] = download_and_extract_json(
-                corpus_path=corpus_path,
-                prefix=prefix,
-                csv_path=csv_path,
-                file_num=i,
-                compress=compress)
+        files = download_and_extract_json(
+            corpus_path=corpus_path,
+            prefix=prefix,
+            csv_path=csv_path,
+            file_num=i,
+            compress=compress,
+            testing=testing,
+            cache=cache)
 
-            if 'neo4j' == engine:
-                neo4j_utils.cypher_import(dict_of_csv_files[table])
-            elif 'psql' == engine:
-                postgres_utils.psql_import(dict_of_csv_files[table])
+        if 'neo4j' == engine:
+            neo4j_utils.cypher_import(files)
+            dict_of_csv_files = {}
+        elif 'psql' == engine:
+            postgres_utils.psql_import(files)
+            dict_of_csv_files = {}
 
-    if 'neo4j-admin' == engine:
-        neo4j_utils.admin_import(dict_of_csv_files)
+        if not cache:
+            for file in files:
+                delete_file(files)
+    #     else:
+    #         for table in files:
+    #             dict_of_csv_files[table]
+    #
+    # if 'neo4j-admin' == engine:
+    #     neo4j_utils.admin_import(dict_of_csv_files)
 
 
             #file = csv_filename(t, csv_path, prefix, suffix, i, compress)
@@ -127,7 +139,9 @@ def download_and_extract_json(
         prefix='s2-corpus',
         csv_path='data/csv',
         file_num=0,
-        compress=True):
+        compress=True,
+        testing=True,
+        cache=True):
 
     json_s3 = 'open-corpus/2019-09-17/{prefix}-{num}.gz'.format(
             prefix=prefix,
@@ -148,9 +162,11 @@ def download_and_extract_json(
             make_int=False,
             unique=True,
             neo4j=True,
-            compress=compress
+            compress=compress,
+            testing=testing
             )
-
+    if not cache:
+        delete_file(json_local)
     # return the list of filenames for futher processing!
     return csv_files
 
@@ -159,7 +175,7 @@ def download_and_extract_json(
 def download_from_s3(source, destination):
 
     s3 = boto3.client('s3')
-
+    bucket = 'data-atsume-arxiv'
     if os.path.exists(destination):
         print(destination + ' already exists')
     else:
