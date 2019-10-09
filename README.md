@@ -17,23 +17,18 @@ From there it may be necessary to call additional functions
 to remove duplicates and add indexes as needed.
 
 
-## For neo4j import:
-- Due to file-write permission, you will need to run the script
-with `sudo` (or with `sudo -u neo4j`).
-
+# Neo4j import:
 There are two versions of the script:
 - One uses `neo4j-admin import`, which is adapted for large-scale bulk csv imports,
 but it only works on an empty database, and all of the csv files are available
 locally on disk.
 - The other method uses Cypher queries `COPY FROM CSV WITH HEADERS AS row...`
-
-For `neo4j-admin import`
-
+## For `neo4j-admin import`:
 You will need to delete (or backup) the current database before repopulating:
 `sudo rm -r /var/lib/neo4j/data/databases/graph.db`
 
 
-Troubleshooting:
+## Troubleshooting:
 Sometimes you try to start neo4j and it will not work:
 `sudo neo4j start`
 
@@ -45,7 +40,8 @@ If neo4j is not running, check the log file:
 
 You may see an error like this:
 ```
-ERROR Failed to start Neo4j: Starting Neo4j failed: Component 'org.neo4j.server.database.LifecycleManagingDatabase@xxxxxx'
+ERROR Failed to start Neo4j: Starting Neo4j failed:
+Component 'org.neo4j.server.database.LifecycleManagingDatabase@xxxxxx'
 was was successfully initialized, but failed to start.
 Please see the attached cause exception
 "Store and its lock file has been locked by another process:

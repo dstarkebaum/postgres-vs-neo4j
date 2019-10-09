@@ -86,19 +86,17 @@ def cypher_import(files):
     cypher = make_cypher_queries(files)
 
     graph = start_connection()
-    transaction = graph.begin(autocommit=False)
-
     # make nodes
-    verbose_query(transaction,cypher['paper'])
-    verbose_query(transaction,cypher['author'])
+    verbose_query(graph,cypher['paper'])
+    verbose_query(graph,cypher['author'])
 
     # make relations
-    verbose_query(transaction,cypher['cites'])
-    verbose_query(transaction,cypher['is_cited_by'])
-    verbose_query(transaction,cypher['has_author'])
+    verbose_query(graph,cypher['cites'])
+    verbose_query(graph,cypher['is_cited_by'])
+    verbose_query(graph,cypher['has_author'])
 
     delete_duplicate_relationships(transaction)
-    transaction.commit() # or maybe not
+     # or maybe not
 
 
 def make_cypher_queries(
@@ -172,28 +170,24 @@ def make_cypher_queries(
     return cypher
 
 
-def verbose_query(transaction, query):
+def verbose_query(graph, query):
 
     start=time.perf_counter()
 
     print(query)
-
-    cursor = transaction.run(query)
-    print("Execution time: "+str(time.perf_counter()-start))
+    transaction = graph.begin(autocommit=False)
+    try:
+        cursor = transaction.run(query)
+        transaction.commit()
+    except Exception as e:
+        transaction.rollback()
+        print(e)
+        return None
+    finally:
+        transaction.commit() # or maybe not
+        print("Execution time: "+str(time.perf_counter()-start))
 
     return cursor
-
-    # transation = graph.begin(autocommit=False)
-    #
-    # try:
-    #     cursor = graph.run(query)
-    # except Exception as e:
-    #     transaction.rollback()
-    #     print(e)
-    #     return None
-    # finally:
-    #     transaction.commit() # or maybe not
-    #     print("Execution time: "+str(time.perf_counter()-start))
 
 
 def total_size(database):
