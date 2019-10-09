@@ -36,7 +36,7 @@ sudo apt-get --yes install \
 
 # install python packages
 #pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
-yes | pip3 install pandas psycopg2 boto3
+yes | pip3 install psycopg2 boto3
 
 # create a PostgreSQL history file to record queries to the database
 touch ~/.psql_history

@@ -12,10 +12,7 @@ sudo apt-get --yes update && sudo apt-get --yes upgrade
 # install general utilities
 sudo apt-get --yes install \
 ssh=1:7.6p1-4ubuntu0.3 \
-rsync=3.1.2-2.1ubuntu1 \
 git=1:2.17.1-1ubuntu0.4 \
-supervisor=3.3.1-1.1 \
-bc=1.07.1-2 \
 awscli=1.14.44-1ubuntu1
 
 # install python tools
@@ -23,9 +20,8 @@ sudo apt-get --yes install \
   python3-dev=3.6.7-1~18.04 \
   python3-pip=9.0.1-2.3~ubuntu1.18.04.1 \
   python3-numpy=1:1.13.3-2ubuntu1 \
-  python3-scipy=0.19.1-2ubuntu1 \
   python3-pandas=0.22.0-4 \
-  ipython3=5.5.0-1
+  python3-venv=3.6.7-1~18.04
 
 # Install Java Runtime 8 (as a dependency)
 sudo apt-get --yes install openjdk-8-jdk
@@ -43,10 +39,21 @@ wget https://s3-eu-west-1.amazonaws.com/com.neo4j.graphalgorithms.dist/neo4j-gra
 sudo -u neo4j unzip -d /var/lib/neo4j/plugins neo4j-graph-algorithms-3.5.11.0-standalone.zip
 sudo -u neo4j wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/3.5.0.5/apoc-3.5.0.5-all.jar -P /var/lib/neo4j/plugins
 
-sudo -u neo4j cp neo4j.conf /etc/neo4j/neo4j.conf
+# download and install ps_mem.py to monitor RAM usage
+wget https://raw.githubusercontent.com/pixelb/ps_mem/master/ps_mem.py
+sudo install ps_mem.py /usr/local/bin/ps_mem
+rm ps_mem.py
 
-#git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
+sudo -u ubuntu sh -c 'yes | pip3 install wheel'
+sudo -u ubuntu sh -c 'yes | pip3 install py2neo boto3'
 
+
+cd /home/ubuntu
+sudo -u ubuntu git clone https://github.com/dstarkebaum/postgres-vs-neo4j.git
+
+# replace the neo4j configuration file
+sudo -u neo4j cp /etc/neo4j/neo4j.conf /home/ubuntu/neo4j.conf_bak
+sudo -u neo4j cp /home/ubuntu/postgres-vs-sql/config/neo4j.conf /etc/neo4j/neo4j.conf
 
 # See neo4j installation page for more details:
 # https://neo4j.com/docs/operations-manual/current/installation/linux/debian/
