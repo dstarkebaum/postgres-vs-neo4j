@@ -43,7 +43,7 @@ def monitor_process(process,output='',sleep=10):
 
             msg = datetime.now().strftime("%m/%d/%Y,%H:%M:%S") + \
                     " "+pids[0]+" "+str(get_raw_mem(pids[0]))
-            print(msg)
+            #print(msg)
             f.write(msg)
             time.sleep(sleep)
 
