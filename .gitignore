@@ -6,4 +6,4 @@ setup/data/
 logs/
 setup/logs/
 __pycache__/
-.log
+*.log

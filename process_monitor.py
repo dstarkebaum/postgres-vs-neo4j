@@ -27,7 +27,7 @@ def get_raw_mem(pid):
 
 
 
-def monitor_process(process,output=''):
+def monitor_process(process,output='',sleep=10):
     if len(output)==0:
         output = '{p}_mem.log'.format(p=process)
     quit=False
@@ -45,7 +45,7 @@ def monitor_process(process,output=''):
                     " "+pids[0]+" "+str(get_raw_mem(pids[0]))
             print(msg)
             f.write(msg)
-            time.sleep(2)
+            time.sleep(sleep)
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -54,6 +54,8 @@ def parse_args():
             help='the name of the process to track')
     parser.add_argument('-o','--output',type=str,default='',
             help='filename of the log')
+    parser.add_argument('-s','--sleep',type=int,default=10,
+            help='sleep time per cycle, in seconds')
 
     return parser.parse_args()
 
@@ -61,7 +63,7 @@ def main():
     args = parse_args()
     #sub.Popen(['pgrep', args.process])
         #sudo pgrep -f neo4j
-    monitor_process(args.process, args.output)
+    monitor_process(args.process, args.output, args.sleep)
 
 if __name__ == "__main__":
     main()
