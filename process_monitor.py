@@ -31,21 +31,22 @@ def monitor_process(process,output='',sleep=10):
     if len(output)==0:
         output = '{p}_mem.log'.format(p=process)
     quit=False
-    with open(output, 'a+') as f:
-        while not quit:
+    while not quit:
 
-            pids = get_pids(process)
+        pids = get_pids(process)
 
-            if 0 == len(pids):
-                quit=True
-                print('Process '+ process + ' no longer exists!' )
-                return None
+        if 0 == len(pids):
+            quit=True
+            print('Process '+ process + ' no longer exists!' )
+            return None
 
-            msg = datetime.now().strftime("%m/%d/%Y,%H:%M:%S") + \
-                    " "+pids[0]+" "+str(get_raw_mem(pids[0]))
-            #print(msg)
+        msg = datetime.now().strftime("%m/%d/%Y,%H:%M:%S") + \
+                " "+pids[0]+" "+str(get_raw_mem(pids[0]))
+        #print(msg)
+        with open(output, 'a+') as f:
             f.write(msg)
-            time.sleep(sleep)
+
+        time.sleep(sleep)
 
 def parse_args():
     parser = argparse.ArgumentParser()
