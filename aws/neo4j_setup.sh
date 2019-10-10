@@ -35,25 +35,23 @@ sudo apt-get --yes update
 sudo apt-get --yes install neo4j #==3.5.11
 
 # download Graph algorithm and APOC plugins into /var/lib/neo4j/plugins
-wget https://s3-eu-west-1.amazonaws.com/com.neo4j.graphalgorithms.dist/neo4j-graph-algorithms-3.5.11.0-standalone.zip;
-sudo -u neo4j unzip -d /var/lib/neo4j/plugins neo4j-graph-algorithms-3.5.11.0-standalone.zip
-sudo -u neo4j wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/3.5.0.5/apoc-3.5.0.5-all.jar -P /var/lib/neo4j/plugins
+#wget https://s3-eu-west-1.amazonaws.com/com.neo4j.graphalgorithms.dist/neo4j-graph-algorithms-3.5.11.0-standalone.zip;
+#sudo -u neo4j unzip -d /var/lib/neo4j/plugins neo4j-graph-algorithms-3.5.11.0-standalone.zip
+#sudo -u neo4j wget https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/3.5.0.5/apoc-3.5.0.5-all.jar -P /var/lib/neo4j/plugins
 
 # download and install ps_mem.py to monitor RAM usage
 wget https://raw.githubusercontent.com/pixelb/ps_mem/master/ps_mem.py
 sudo install ps_mem.py /usr/local/bin/ps_mem
 rm ps_mem.py
 
+cd /home/ubuntu
 sudo -u ubuntu sh -c 'yes | pip3 install wheel'
 sudo -u ubuntu sh -c 'yes | pip3 install py2neo boto3'
-
-
-cd /home/ubuntu
 sudo -u ubuntu git clone https://github.com/dstarkebaum/postgres-vs-neo4j.git
 
 # replace the neo4j configuration file
-sudo -u neo4j cp /etc/neo4j/neo4j.conf /home/ubuntu/neo4j.conf_bak
-sudo -u neo4j cp /home/ubuntu/postgres-vs-sql/config/neo4j.conf /etc/neo4j/neo4j.conf
+#sudo -u neo4j cp /etc/neo4j/neo4j.conf /home/ubuntu/neo4j.conf_bak
+#sudo -u neo4j cp /home/ubuntu/postgres-vs-sql/config/neo4j.conf /etc/neo4j/neo4j.conf
 
 # See neo4j installation page for more details:
 # https://neo4j.com/docs/operations-manual/current/installation/linux/debian/

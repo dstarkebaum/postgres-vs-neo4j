@@ -106,8 +106,8 @@ def populate_database(
             dict_of_csv_files = {}
 
         if not cache:
-            for file in files:
-                delete_file(files)
+            for f in files:
+                delete_file(f)
     #     else:
     #         for table in files:
     #             dict_of_csv_files[table]
