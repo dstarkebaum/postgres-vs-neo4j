@@ -30,6 +30,7 @@ def get_raw_mem(pid):
 def monitor_process(process,output='',sleep=10):
     if len(output)==0:
         output = '{p}_mem.log'.format(p=process)
+    print(output)
     quit=False
     while not quit:
 
@@ -42,9 +43,9 @@ def monitor_process(process,output='',sleep=10):
 
         msg = datetime.now().strftime("%m/%d/%Y,%H:%M:%S") + \
                 " "+pids[0]+" "+str(get_raw_mem(pids[0]))
-        #print(msg)
-        with open(output, 'a+') as f:
-            f.write(msg)
+        print(msg)
+        # with open(output, 'a+') as f:
+        #     f.write(msg)
 
         time.sleep(sleep)
 
