@@ -1,9 +1,18 @@
 import logging
 import sys
+from datetime import datetime, timedelta
+logger = logging.getLogger(__name__)
 
 # setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+converter = lambda x, y:
+    (datetime.utcnow() - timedelta (
+        hours=7 if time.localtime().tm_isdst else 6)
+    ).timetuple()
+logging.Formatter.converter = converter
+
 handler = logging.FileHandler('populate_database.log')
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(message)s')

@@ -194,14 +194,14 @@ def download_and_extract_json(
 # Download a single zipped json from S3
 def download_from_s3(source, destination):
 
-    s3 = boto3.client('s3')
-    bucket = 'data-atsume-arxiv'
     if os.path.exists(destination):
-        log.logger.warning(destination + ' already exists')
+        log.logger.info(destination + ' already exists')
     else:
         start_time = time.perf_counter()
         log.logger.info('Downloading from '+ source + ' to ' + destination)
         ensure_dir(destination)
+        s3 = boto3.client('s3')
+        bucket = 'data-atsume-arxiv'
         s3.download_file(bucket, source, destination)
         log.logger.info('Completed download in ' + str(time.perf_counter()-start_time)+'s')
 
