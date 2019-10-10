@@ -8,8 +8,8 @@ from datetime import datetime
 from setup import json_to_csv
 from setup import postgres_utils
 from setup import neo4j_utils
+from setup import logger_config as log
 import boto3
-
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
@@ -75,7 +75,7 @@ def populate_database(
         testing=True,
         cache=True):
 
-    print(os.getcwd())
+    log.logger.info(os.getcwd())
 
     # create a dictionary of path names
     #        {t : path_list(
@@ -98,9 +98,9 @@ def populate_database(
             cache=cache)
 
         if not cache and 'neo4j' == engine:
-            print('Neo4j with no cache: Processing files one at a time')
-            print('WARNING: Many relations will be missing because')
-            print('they will not be created if one of the nodes is missing')
+            log.logger.warning('Neo4j with no cache: Processing files one at a time')
+            log.logger.warning('WARNING: Many relations will be missing because')
+            log.logger.warning('they will not be created if one of the nodes is missing')
             neo4j_utils.cypher_import(files)
 
         elif 'psql' == engine:
@@ -197,13 +197,13 @@ def download_from_s3(source, destination):
     s3 = boto3.client('s3')
     bucket = 'data-atsume-arxiv'
     if os.path.exists(destination):
-        print(destination + ' already exists')
+        log.logger.warning(destination + ' already exists')
     else:
         start_time = time.perf_counter()
-        print('Downloading from '+ source + ' to ' + destination)
+        log.logger.info('Downloading from '+ source + ' to ' + destination)
         ensure_dir(destination)
         s3.download_file(bucket, source, destination)
-        print('Completed download in ' + str(time.perf_counter()-start_time)+'s')
+        log.logger.info('Completed download in ' + str(time.perf_counter()-start_time)+'s')
 
 
 def ensure_dir(file_path):

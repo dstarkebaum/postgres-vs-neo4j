@@ -6,8 +6,11 @@ from contextlib import ExitStack
 import time
 from datetime import datetime
 import py2neo
-#default connection parameters
+import logging
+# setup logging
 
+
+#default connection parameters
 HOST='localhost',
 USER='neo4j',
 PASSWORD='ubuntu',
@@ -210,18 +213,18 @@ def verbose_query(graph, query):
 
     start=time.perf_counter()
 
-    print(query)
+    logging.info(query)
     transaction = graph.begin(autocommit=False)
     try:
         cursor = transaction.run(query)
     except Exception as e:
         transaction.rollback()
-        print(e)
+        logging.info(e)
         return None
     finally:
         transaction.commit() # or maybe not
-        print(cursor.stats())
-        print("Execution time: "+str(time.perf_counter()-start))
+        logging.info(cursor.stats())
+        logging.info("Execution time: "+str(time.perf_counter()-start))
 
     return cursor
 
@@ -232,11 +235,11 @@ def total_size(database):
 
 def make_index(graph,label,properties):
     start=time.perf_counter()
-    print("Making index on :"+label+' ('+properties+')')
+    logging.info("Making index on :"+label+' ('+properties+')')
 
     graph.schema.create_index(label,properties)
 
-    print("Execution time: "+str(time.perf_counter()-start))
+    logging.info("Execution time: "+str(time.perf_counter()-start))
 
 #make_index(graph,label,property):
 #    query='''CREATE INDEX ON :{l}({p})'''.format(l=label,p=property)
@@ -264,7 +267,9 @@ def delete_duplicate_relationships():
             '''
     verbose_query(graph,query)
 
-
+def log_subprocess_output(pipe):
+    for line in iter(pipe.readline, b''): # b'\n'-separated lines
+        logging.info('subprocess: %r', line)
 
 # This import requires a complete dictionary of files all at once
 # stored locally on disk, and is likely to run out of RAM for large imports
@@ -275,16 +280,16 @@ def admin_import(dict_of_csv_files):
         stdout_log = stack.enter_context(open('logs/import_csv.stdout','w'))
         stderr_log = stack.enter_context(open('logs/import_csv.stderr','w'))
         timer = stack.enter_context(open('logs/import_csv.timer','a+'))
-        stdout_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+        logging.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import\n')
-        stdout_log.write('Papers: '+ ','.join(dict_of_csv_files['papers'])+'\n')
-        stdout_log.write('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
-        stdout_log.write('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
-        stdout_log.write('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
-        stdout_log.write('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
+        logging.info('Papers: '+ ','.join(dict_of_csv_files['papers'])+'\n')
+        logging.info('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
+        logging.info('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
+        logging.info('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
+        logging.info('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
         #stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
 
-        stderr_log.write(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+        logging.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import')
 
         bash_commands= [
@@ -303,18 +308,19 @@ def admin_import(dict_of_csv_files):
                     #','.join(files['is_author_of'])
                     ]
 
-        print(' '.join(bash_commands))
-        subprocess.call(
+        logging.info(' '.join(bash_commands))
+
+        pipe = subprocess.call(
                 bash_commands,
-                stdout=stdout_log,
-                stderr=stderr_log
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
                 )
 
-        timer.write(','.join([
-                    datetime.now().strftime("%m/%d/%Y,%H:%M:%S"),
-                    str(len(dict_of_csv_files['papers'])),
-                    str(time.perf_counter()-start_time)
-                    ])+'\n'
+        log_subprocess_output(pipe)
+
+        logging.info(
+                "Number of files: "+str(len(dict_of_csv_files['papers']))+\
+                ", processing time: "+str(time.perf_counter()-start_time)
                 )
 
 # def find_largest_groups():

@@ -7,6 +7,10 @@ import argparse
 import gzip
 from contextlib import ExitStack
 
+import logging
+
+
+
 # EX: To parse one json file into a set of compressed csv files for neo4j, try this:
 # python3 parse_json.py data/s2-corpus/s2-corpus-001 --unique --neo4j --compress
 
@@ -108,15 +112,15 @@ def parse_json(
         testing=True
         ):
 
-    print("Parsing: " + corpus_path)
-    print('Exporting to ' + output_dir)
+    logging.info("Parsing: " + corpus_path)
+    logging.info('Exporting to ' + output_dir)
 
     if make_int:
-        print('Storing ids as big integers ~ Order(10^49)')
+        logging.info('Storing ids as big integers ~ Order(10^49)')
     if unique:
-        print('Creating unique filenames like: '+os.path.basename(corpus_path)+'-[table_name].csv')
+        logging.info('Creating unique filenames like: '+os.path.basename(corpus_path)+'-[table_name].csv')
     if compress:
-        print('Compressing output files with gzip')
+        logging.info('Compressing output files with gzip')
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -135,7 +139,7 @@ def parse_json(
     output_files = {t:absolute_path(t,output_dir,src_file,unique,compress) for t in tables}
 
     start_time = time.perf_counter()
-    print("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+    logging.info("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     # keep a count of the number of records parsed
     count = 0
@@ -163,8 +167,8 @@ def parse_json(
 
             # test with 100 lines to start
             if count in [100, 1000, 10000, 100000, 500000]:
-                print(str(count)+" records parsed after "+to_secs(time.perf_counter() - start_time)+" seconds")
-            if 10000 == count and testing:
+                logging.info(str(count)+" records parsed after "+to_secs(time.perf_counter() - start_time)+" seconds")
+            if 100 == count and testing:
                 break
             count = count + 1
 
@@ -268,7 +272,7 @@ def parse_json(
                     files['has_author'].write(format(has_author_row))
                     #files['is_author_of'].write(format(is_author_of_row))
 
-    print(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
+    logging.info(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
 
     # return the list of file names for further processing!
     return output_files

@@ -4,6 +4,7 @@ import psycopg2
 import os
 import time
 import subprocess
+import logging
 
 #from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
@@ -39,11 +40,11 @@ def with_connection(f):
             return_value = f(connection, *args, **kwargs)
         except Exception:
             connection.rollback()
-            print(f.__name__+" failed!")
+            logging.info(f.__name__+" failed!")
             raise
         else:
             connection.commit() # or maybe not
-            print(f.__name__+" success!")
+            logging.info(f.__name__+" success!")
         finally:
             connection.close()
 
@@ -54,15 +55,15 @@ def with_connection(f):
 
 def verbose_query(cursor, query):
     start=time.perf_counter()
-    print(cursor.mogrify(query).decode('utf-8'))
+    logging.info(cursor.mogrify(query).decode('utf-8'))
     try:
         cursor.execute(query)
         for record in cursor:
-            print(str(record))
+            logging.info(str(record))
     except (psycopg2.ProgrammingError, psycopg2.errors.DuplicateTable) as error:
-        print(error)
+        logging.info(error)
 
-    print("Execution time: "+str(time.perf_counter()-start))
+    logging.info("Execution time: "+str(time.perf_counter()-start))
 
 
 
@@ -81,7 +82,7 @@ def remove_duplicates(connection,table,columns):
 
     verbose_query(cursor, query)
 
-    print(str(time.perf_counter()-start) + " s to remove duplicates " +
+    logging.info(str(time.perf_counter()-start) + " s to remove duplicates " +
             "from {t}({c})".format(t=table,c=','.join(columns))
             )
 
@@ -115,7 +116,7 @@ def create_index(
             elif ('vector'==gin_type or 'vec'==gin_type):
                 gin_cols.append("to_tsvector('simple', {c})".format(c=col))
             else:
-                print("Ignoring invalid gin_type: " + gin_type)
+                logging.info("Ignoring invalid gin_type: " + gin_type)
         cols = ', '.join(gin_cols)
     else:
         cols = ', '.join(columns)
@@ -175,7 +176,7 @@ def set_primary_key(
 
     verbose_query(cursor, query)
 
-    print(str(time.perf_counter()-start) +
+    logging.info(str(time.perf_counter()-start) +
             "s to set primary key on " +
             "{i}".format(i=index)
             )
