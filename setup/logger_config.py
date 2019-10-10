@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-converter = lambda x, y:
-    (datetime.utcnow() - timedelta (
+converter = lambda x, y: (
+    datetime.utcnow() - timedelta (
         hours=7 if time.localtime().tm_isdst else 6)
     ).timetuple()
 logging.Formatter.converter = converter
