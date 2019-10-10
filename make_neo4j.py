@@ -15,21 +15,22 @@ pop.populate_database(
         end=0,
         compress=False,
         engine='neo4j',
-        testing=True)
+        testing=True,
+        cache=True)
 
-n4j.make_all_indexes()
+#n4j.make_all_indexes()
 
-pop.populate_database(
-        corpus_path='data/s2-corpus',
-        csv_path='data/csv',
-        prefix='s2-corpus',
-        suffix='.csv',
-        start=0,
-        end=176,
-        compress=False,
-        engine='neo4j',
-        testing=False,
-        cache=False)
+# pop.populate_database(
+#         corpus_path='data/s2-corpus',
+#         csv_path='data/csv',
+#         prefix='s2-corpus',
+#         suffix='.csv',
+#         start=0,
+#         end=176,
+#         compress=False,
+#         engine='neo4j',
+#         testing=False,
+#         cache=False)
 
 #pop.populate_neo4j()
 #pop.download_from_s3()

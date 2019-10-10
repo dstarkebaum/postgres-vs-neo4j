@@ -40,6 +40,8 @@ def start_connection():
         # )
     return graph
 
+
+
 #Decorator to handle database connections.
 # def with_connection(f):
 #     def with_connection_(*args, **kwargs):
@@ -81,21 +83,49 @@ def start_connection():
 # @with_connection
 
 # This import loads one group of files at a time
+
+def make_nodes(files):
+    cypher = make_cypher_queries(files)
+
+    graph = start_connection()
+
+    if 'papers' in files:
+        verbose_query(graph,cypher['papers'])
+    if 'authors' in files:
+        verbose_query(graph,cypher['authors'])
+
+
+def make_relations(files):
+
+    cypher = make_cypher_queries(files)
+
+    graph = start_connection()
+
+    if 'cites' in files:
+        verbose_query(graph,cypher['cites'])
+    if 'is_cited_by' in files:
+        verbose_query(graph,cypher['is_cited_by'])
+    if 'has_author' in files:
+        verbose_query(graph,cypher['has_author'])
+
 def cypher_import(files):
 
     cypher = make_cypher_queries(files)
 
     graph = start_connection()
     # make nodes
-    verbose_query(graph,cypher['paper'])
-    verbose_query(graph,cypher['author'])
+    if 'papers' in files:
+        verbose_query(graph,cypher['papers'])
+    if 'authors' in files:
+        verbose_query(graph,cypher['authors'])
 
     # make relations
-    verbose_query(graph,cypher['cites'])
-    verbose_query(graph,cypher['is_cited_by'])
-    verbose_query(graph,cypher['has_author'])
-
-    delete_duplicate_relationships(graph)
+    if 'cites' in files:
+        verbose_query(graph,cypher['cites'])
+    if 'is_cited_by' in files:
+        verbose_query(graph,cypher['is_cited_by'])
+    if 'has_author' in files:
+        verbose_query(graph,cypher['has_author'])
      # or maybe not
 
 
@@ -120,52 +150,58 @@ def make_cypher_queries(
 #        CREATE CONSTRAINT ON (a:Author) ASSERT a.id(Author) IS UNIQUE;
 #    '''
 
-    cypher['paper']='''
-        {per}
-        LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        FIELDTERMINATOR '|'
-        {lim}
-        MERGE (p:Paper {{ id:"row.id" }})
-        ON CREATE SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
-        ON CREATE SET p.year = CASE trim(row.year) WHEN "" THEN null ELSE row.year END
-        ON CREATE SET p.doi = CASE trim(row.doi) WHEN "" THEN null ELSE row.doi END
-    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['papers'])
+    if 'papers' in files:
+        cypher['papers']='''
+            {per}
+            LOAD CSV WITH HEADERS FROM "{filename}" AS row
+            FIELDTERMINATOR "|"
+            {lim}
+            MERGE (p:Paper {{ id:row.id }})
+            ON CREATE SET p.title = CASE trim(row.title) WHEN "" THEN null ELSE row.title END
+            ON CREATE SET p.year = CASE trim(row.year) WHEN "" THEN null ELSE row.year END
+            ON CREATE SET p.doi = CASE trim(row.doi) WHEN "" THEN null ELSE row.doi END
+        '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['papers'])
 
-    cypher['author']='''
-        {per}
-        LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        FIELDTERMINATOR '|'
-        {lim}
-        MERGE (a:Author {{ id:"row.id" }})
-        ON CREATE SET a.name = CASE trim(row.name) WHEN "" THEN null ELSE row.name END
-    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['authors'])
+    if 'authors' in files:
+        cypher['authors']='''
+            {per}
+            LOAD CSV WITH HEADERS FROM "{filename}" AS row
+            FIELDTERMINATOR "|"
+            {lim}
+            MERGE (a:Author {{ id:row.id }})
+            ON CREATE SET a.name = CASE trim(row.name) WHEN "" THEN null ELSE row.name END
+        '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['authors'])
 
-    cypher['cites']='''
-        {per}
-        LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        FIELDTERMINATOR '|'
-        {lim}
-        MATCH (p1:Paper {{id:"row.id"}}),(p2:Paper {{id:"row.cites_id"}})
-        MERGE (p1)-[:CITES]->(p2)
-    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['cites'])
+    if 'cites' in files:
+        cypher['cites']='''
+            {per}
+            LOAD CSV WITH HEADERS FROM "{filename}" AS row
+            FIELDTERMINATOR "|"
+            {lim}
+            MATCH (p1:Paper {{id:row.id}}),(p2:Paper {{id:row.outcit_id}})
+            MERGE (p1)-[:CITES]->(p2)
+        '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['cites'])
 
-    cypher['is_cited_by']='''
-        {per}
-        LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        FIELDTERMINATOR '|'
-        {lim}
-        MATCH (p1:Paper {{id:"row.id"}}),(p2:Paper {{id:"row.incit_id"}})
-        MERGE (p1)-[:IS_CITED_BY]->(p2)
-    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['is_cited_by'])
+    if 'is_cited_by' in files:
+        cypher['is_cited_by']='''
+            {per}
+            LOAD CSV WITH HEADERS FROM "{filename}" AS row
+            FIELDTERMINATOR "|"
+            {lim}
+            MATCH (p1:Paper {{id:row.id}}),(p2:Paper {{id:row.incit_id}})
+            MERGE (p1)-[:IS_CITED_BY]->(p2)
+        '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['is_cited_by'])
 
-    cypher['has_author']='''
-        {per}
-        LOAD CSV WITH HEADERS FROM "{filename}" AS row
-        FIELDTERMINATOR '|'
-        {lim}
-        MATCH (p:Paper {{id:"row.id"}}),(a:Author {{id:"row.outcit_id"}})
-        MERGE (p1)-[:HAS_AUTHOR]->(p2)
-    '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['has_author'])
+
+    if 'has_author' in files:
+        cypher['has_author']='''
+            {per}
+            LOAD CSV WITH HEADERS FROM "{filename}" AS row
+            FIELDTERMINATOR "|"
+            {lim}
+            MATCH (p:Paper {{id:row.paper_id}}),(a:Author {{id:row.author_id}})
+            MERGE (p)-[:HAS_AUTHOR]->(a)
+        '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['has_author'])
 
     return cypher
 
@@ -184,6 +220,7 @@ def verbose_query(graph, query):
         return None
     finally:
         transaction.commit() # or maybe not
+        print(cursor.stats())
         print("Execution time: "+str(time.perf_counter()-start))
 
     return cursor
@@ -212,14 +249,18 @@ def make_all_indexes():
 #tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 
-def delete_duplicate_relationships(graph):
+def delete_duplicate_relationships():
+    graph = start_connection()
+    # Gather all of the relations between nodes
+    # collect the relations that have the same source and destination nodes
+    # then for any collection bigger than size(1):
+    # delete all but the first entry in each collection
     query = '''
             MATCH (a)-[r]->(b)
-            WITH a, b, COLLECT(r) AS rr
-            WHERE SIZE(rr) > 1
-            WITH rr
-            LIMIT 100000
-            FOREACH (r IN TAIL(rr) | DELETE r);
+            WITH a, b, COLLECT(r) AS relations
+            WHERE SIZE(relations) > 1
+            WITH relations
+            FOREACH (r IN TAIL(relations) | DELETE r);
             '''
     verbose_query(graph,query)
 

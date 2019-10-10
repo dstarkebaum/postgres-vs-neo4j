@@ -78,7 +78,6 @@ def populate_database(
     print(os.getcwd())
 
     # create a dictionary of path names
-    dict_of_csv_files = {}
     #        {t : path_list(
     #            t, csv_path, prefix, suffix, start, end, compress
     #        ) for t in tables }
@@ -86,7 +85,7 @@ def populate_database(
     #missing_file = False
 
     # loop through the list of normalized tables in our database
-
+    collection_of_files = {}
     for i in range(start, end+1):
 
         files = download_and_extract_json(
@@ -98,16 +97,32 @@ def populate_database(
             testing=testing,
             cache=cache)
 
-        if 'neo4j' == engine:
+        if not cache and 'neo4j' == engine:
+            print('Neo4j with no cache: Processing files one at a time')
+            print('WARNING: Many relations will be missing because')
+            print('they will not be created if one of the nodes is missing')
             neo4j_utils.cypher_import(files)
-            dict_of_csv_files = {}
+
         elif 'psql' == engine:
             postgres_utils.psql_import(files)
-            dict_of_csv_files = {}
 
-        if not cache:
+        if cache:
+            collection_of_files[i]=files
+        else:
             for f in files:
                 delete_file(files[f])
+    if cache and 'neo4j' == engine:
+
+        for i in range(start, end+1):
+            neo4j_utils.make_nodes(collection_of_files[i])
+
+        neo4j_utils.make_all_indexes()
+
+        for i in range(start, end+1):
+            neo4j_utils.make_relations(collection_of_files[i])
+
+        neo4j_utils.delete_duplicate_relationships()
+
     #     else:
     #         for table in files:
     #             dict_of_csv_files[table]
@@ -141,7 +156,8 @@ def download_and_extract_json(
         file_num=0,
         compress=True,
         testing=True,
-        cache=True):
+        cache=True,
+        engine='neo4j'):
 
     json_s3 = 'open-corpus/2019-09-17/{prefix}-{num}.gz'.format(
             prefix=prefix,
@@ -156,12 +172,16 @@ def download_and_extract_json(
 
     download_from_s3(json_s3, json_local)
 
+    use_admin_headers = False
+    if 'neo4j-admin' == engine:
+        use_admin_headers = True
+
     csv_files = json_to_csv.parse_json(
             json_local,
             csv_path,
             make_int=False,
             unique=True,
-            neo4j=True,
+            neo4j=use_admin_headers,
             compress=compress,
             testing=testing
             )
