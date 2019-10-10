@@ -95,7 +95,7 @@ def cypher_import(files):
     verbose_query(graph,cypher['is_cited_by'])
     verbose_query(graph,cypher['has_author'])
 
-    delete_duplicate_relationships(transaction)
+    delete_duplicate_relationships(graph)
      # or maybe not
 
 
@@ -212,7 +212,7 @@ def make_all_indexes():
 #tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 
-def delete_duplicate_relationships(transaction):
+def delete_duplicate_relationships(graph):
     query = '''
             MATCH (a)-[r]->(b)
             WITH a, b, COLLECT(r) AS rr
@@ -221,7 +221,7 @@ def delete_duplicate_relationships(transaction):
             LIMIT 100000
             FOREACH (r IN TAIL(rr) | DELETE r);
             '''
-    verbose_query(transaction,query)
+    verbose_query(graph,query)
 
 
 
