@@ -238,11 +238,12 @@ def total_size(database):
     return database.store_file_sizes['TotalStoreSize']
 
 
-def make_index(graph,label,properties):
+def make_index(graph,label,property):
     start=time.perf_counter()
-    logger.info("Making index on :"+label+' ('+properties+')')
+    logger.info("Making index on :"+label+' ('+property+')')
 
-    graph.schema.create_index(label,properties)
+    graph.schema.create_uniqueness_constraint(label,property)
+    #graph.schema.create_index(label,property)
 
     logger.info("Execution time: "+str(time.perf_counter()-start))
 
@@ -252,8 +253,8 @@ def make_index(graph,label,properties):
 
 def make_all_indexes():
     graph = start_connection()
-    make_index(graph,'Author',('id'))
-    make_index(graph,'Paper',('id'))
+    make_index(graph,'Author','id')
+    make_index(graph,'Paper','id')
     return graph
 #tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
