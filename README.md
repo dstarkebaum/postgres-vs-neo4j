@@ -25,6 +25,7 @@ locally on disk.
 - The other method uses Cypher queries `COPY FROM CSV WITH HEADERS AS row...`
 ## For `neo4j-admin import`:
 You will need to delete (or backup) the current database before repopulating:
+
 `sudo rm -r /var/lib/neo4j/data/databases/graph.db`
 
 
@@ -64,6 +65,18 @@ You can also do this by command line:
 Then remove the store_lock
 `sudo rm /var/lib/neo4j/data/databases/store_lock`
 
+## Setting up a password:
+If you haven't started your server yet, you can pre-configure neo4j
+with a default password using neo4j-admin:
+
+`sudo neo4j-admin set-initial-password <password>`
+
+If you have already started your database you can login to it
+with cypher-shell, (default user:`neo4j`, default: `neo4j`)
+`CALL dbms.security.changePassword("<password>")`
+
+
+
 You may also need to modify the neo4j configuration file:
 `sudo nano /etc/neo4j/neo4j.conf`
 
@@ -98,18 +111,40 @@ according to your system clock instead of UTC
 Ex: import just one set of compressed csv files in data/csv/s2-corpus-000-[table].csv.gz:
 `sudo python3 setup/populated_database.py --compress --start 0 --end 0`
 
-Also, check the logfiles for this script at:
-`nano logs/import_csv.stderr`
-`nano logs/import_csv.stdout`
-`nano logs/import_csv.timer`
 
-Once everything is complete, you may need to start neo4j using systemctl:
-`sudo systemctl start neo4j`
+Check the results with `cypher-shell`:
+`CALL db.indexes();`
 
 ## For postgres import
 - More to come soon
 
 
+
+## Increasing EBS Volume size
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modify-volume.html
+
+You can increase the volumne through the EC2 Console,
+but then you have to tell your linux OS that things have changed.
+After increaseing the volume size, check the current partitions:
+`lsblk`
+
+You should see something like this:
+```
+nvme0n1
+└─nvme0n1p1
+```
+
+You can also check the filesystem with:
+`df -Th`
+
+You can extend the partition (even while it is mounted) with:
+`sudo growpart /dev/nvme0n1 1`
+Note: nvme0n1 is the drive name, and nvme0n1p1 is partition 1 on that drive
+
+Then you extend the file system (usually Ext4) with:
+`sudo resize2fs /dev/nvme0n1p1`
+
+Done!
 [Data Atsume website](http://www.data-atsu.me)
 
 

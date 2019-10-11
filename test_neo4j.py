@@ -16,4 +16,5 @@ pop.populate_database(
         compress=False,
         engine='neo4j',
         testing=True,
-        cache=True)
+        cache=True,
+        use_previous=True)

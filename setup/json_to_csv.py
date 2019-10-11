@@ -69,7 +69,17 @@ def main():
 # /absolute/path/to/output_dir/table_name.csv
 # if unique=True, the name of the json src file is also included:
 # /absolute/path/to/output_dir/src_file-table_name.csv
-def absolute_path(table_name, output_dir, src_file, unique=False,compress=False):
+def absolute_path(table_name, output_dir, corpus_path, unique=False,compress=False):
+
+    # check whether the input json file is compressed
+    compressed_input = (corpus_path.split('.')[-1] == 'gz')
+
+    # get the base filename of the json file
+    src_file = os.path.basename(corpus_path)
+    if compressed_input:
+        # remove '.gz'
+        src_file = src_file[:-3]
+
     filename = ''
 
     if unique:
@@ -127,20 +137,15 @@ def parse_json(
         os.makedirs(output_dir)
     # Print status to STDOUT
 
-    # check whether the input json file is compressed
-    compressed_input = (corpus_path.split('.')[-1] == 'gz')
-
-    # get the base filename of the json file
-    src_file = os.path.basename(corpus_path)
-    if compressed_input:
-        # remove '.gz'
-        src_file = src_file[:-3]
-
     # make a dictionary of file names for each csv table
-    output_files = {t:absolute_path(t,output_dir,src_file,unique,compress) for t in tables}
+    output_files = {t:absolute_path(t,output_dir,corpus_path,unique,compress) for t in tables}
 
     start_time = time.perf_counter()
     logger.info("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
+
+    # check whether the input json file is compressed
+    compressed_input = (corpus_path.split('.')[-1] == 'gz')
 
     # keep a count of the number of records parsed
     count = 0

@@ -45,8 +45,8 @@ sudo install ps_mem.py /usr/local/bin/ps_mem
 rm ps_mem.py
 
 cd /home/ubuntu
-sudo -u ubuntu sh -c 'yes | pip3 install wheel'
-sudo -u ubuntu sh -c 'yes | pip3 install py2neo boto3'
+sudo -u ubuntu sh -c 'pip3 install wheel'
+sudo -u ubuntu sh -c 'pip3 install py2neo boto3 psycopg2-binary'
 sudo -u ubuntu git clone https://github.com/dstarkebaum/postgres-vs-neo4j.git
 
 # replace the neo4j configuration file

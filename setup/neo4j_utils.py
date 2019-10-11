@@ -116,7 +116,9 @@ def cypher_import(files):
 
     cypher = make_cypher_queries(files)
 
-    graph = start_connection()
+    #graph = start_connection()
+    graph = make_all_indexes()
+
     # make nodes
     if 'papers' in files:
         verbose_query(graph,cypher['papers'])
@@ -252,6 +254,7 @@ def make_all_indexes():
     graph = start_connection()
     make_index(graph,'Author',('id'))
     make_index(graph,'Paper',('id'))
+    return graph
 #tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
 

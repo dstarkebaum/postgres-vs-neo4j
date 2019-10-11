@@ -114,7 +114,8 @@ def populate_database(
         compress=True,
         engine='neo4j',
         testing=True,
-        cache=True):
+        cache=True,
+        use_previous=False):
 
     logger.info(os.getcwd())
 
@@ -129,14 +130,28 @@ def populate_database(
     collection_of_files = {}
     for i in range(start, end+1):
 
-        files = download_and_extract_json(
-            corpus_path=corpus_path,
-            prefix=prefix,
-            csv_path=csv_path,
-            file_num=i,
-            compress=compress,
-            testing=testing,
-            cache=cache)
+        files = {}
+        if use_previous:
+
+            json_local = '{path}/{prefix}-{num}.gz'.format(
+                    path=corpus_path,
+                    prefix=prefix,
+                    num=str(i).zfill(3)
+                    )
+
+            files = {t : json_to_csv.absolute_path(
+                    t, csv_path, json_local, unique=True, compress=compress
+                    ) for t in tables}
+        else:
+
+            files = download_and_extract_json(
+                corpus_path=corpus_path,
+                prefix=prefix,
+                csv_path=csv_path,
+                file_num=i,
+                compress=compress,
+                testing=testing,
+                cache=cache)
 
         if not cache and 'neo4j' == engine:
             logger.warning('Neo4j with no cache: Processing files one at a time')
@@ -154,10 +169,10 @@ def populate_database(
                 delete_file(files[f])
     if cache and 'neo4j' == engine:
 
+        neo4j_utils.make_all_indexes()
+
         for i in range(start, end+1):
             neo4j_utils.make_nodes(collection_of_files[i])
-
-        neo4j_utils.make_all_indexes()
 
         for i in range(start, end+1):
             neo4j_utils.make_relations(collection_of_files[i])
