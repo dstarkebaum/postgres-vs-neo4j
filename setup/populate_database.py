@@ -8,8 +8,49 @@ from datetime import datetime
 from setup import json_to_csv
 from setup import postgres_utils
 from setup import neo4j_utils
-from setup import logger_config as log
+#from setup import logger_config as log
 import boto3
+
+import logging
+import sys
+from datetime import datetime, timedelta
+
+# setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# converter = lambda x, y: (
+#     datetime.utcnow() - timedelta (
+#         hours=7 if time.localtime().tm_isdst else 6)
+#     ).timetuple()
+# logging.Formatter.converter = converter
+
+# make a handler that exports to a file
+handler = logging.FileHandler('populate_database.log')
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+handler.setFormatter(formatter)
+# then add it to the logger
+logger.addHandler(handler)
+
+# log unhandled exceptions
+def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
+    """Handler for unhandled exceptions that will write to the logs"""
+    if issubclass(exc_type, KeyboardInterrupt):
+        # if it's a ctl-C call the default excepthook saved at __excepthook__
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
+
+# tell the python interpreter to use my own exception handler (so it can be logged)
+sys.excepthook = handle_unhandled_exception
+
+json_to_csv.logger.addHandler(handler)
+postgres_utils.logger.addHandler(handler)
+neo4j_utils.logger.addHandler(handler)
+#json_to_csv.logger.setLevel(logging.INFO)
+#postgres_utils.logger.setLevel(logging.INFO)
+#neo4j_utils.logger.setLevel(logging.INFO)
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
@@ -75,7 +116,7 @@ def populate_database(
         testing=True,
         cache=True):
 
-    log.logger.info(os.getcwd())
+    logger.info(os.getcwd())
 
     # create a dictionary of path names
     #        {t : path_list(
@@ -98,9 +139,9 @@ def populate_database(
             cache=cache)
 
         if not cache and 'neo4j' == engine:
-            log.logger.warning('Neo4j with no cache: Processing files one at a time')
-            log.logger.warning('WARNING: Many relations will be missing because')
-            log.logger.warning('they will not be created if one of the nodes is missing')
+            logger.warning('Neo4j with no cache: Processing files one at a time')
+            logger.warning('WARNING: Many relations will be missing because')
+            logger.warning('they will not be created if one of the nodes is missing')
             neo4j_utils.cypher_import(files)
 
         elif 'psql' == engine:
@@ -195,15 +236,15 @@ def download_and_extract_json(
 def download_from_s3(source, destination):
 
     if os.path.exists(destination):
-        log.logger.info(destination + ' already exists')
+        logger.info(destination + ' already exists')
     else:
         start_time = time.perf_counter()
-        log.logger.info('Downloading from '+ source + ' to ' + destination)
+        logger.info('Downloading from '+ source + ' to ' + destination)
         ensure_dir(destination)
         s3 = boto3.client('s3')
         bucket = 'data-atsume-arxiv'
         s3.download_file(bucket, source, destination)
-        log.logger.info('Completed download in ' + str(time.perf_counter()-start_time)+'s')
+        logger.info('Completed download in ' + str(time.perf_counter()-start_time)+'s')
 
 
 def ensure_dir(file_path):

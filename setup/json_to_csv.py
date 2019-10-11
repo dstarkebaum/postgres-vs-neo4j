@@ -9,6 +9,7 @@ from contextlib import ExitStack
 
 import logging
 
+logger = logging.getLogger(__name__)
 
 
 # EX: To parse one json file into a set of compressed csv files for neo4j, try this:
@@ -112,15 +113,15 @@ def parse_json(
         testing=True
         ):
 
-    logging.info("Parsing: " + corpus_path)
-    logging.info('Exporting to ' + output_dir)
+    logger.info("Parsing: " + corpus_path)
+    logger.info('Exporting to ' + output_dir)
 
     if make_int:
-        logging.info('Storing ids as big integers ~ Order(10^49)')
+        logger.info('Storing ids as big integers ~ Order(10^49)')
     if unique:
-        logging.info('Creating unique filenames like: '+os.path.basename(corpus_path)+'-[table_name].csv')
+        logger.info('Creating unique filenames like: '+os.path.basename(corpus_path)+'-[table_name].csv')
     if compress:
-        logging.info('Compressing output files with gzip')
+        logger.info('Compressing output files with gzip')
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -139,7 +140,7 @@ def parse_json(
     output_files = {t:absolute_path(t,output_dir,src_file,unique,compress) for t in tables}
 
     start_time = time.perf_counter()
-    logging.info("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+    logger.info("Start time: "+time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
     # keep a count of the number of records parsed
     count = 0
@@ -167,7 +168,7 @@ def parse_json(
 
             # test with 100 lines to start
             if count in [100, 1000, 10000, 100000, 500000]:
-                logging.info(str(count)+" records parsed after "+to_secs(time.perf_counter() - start_time)+" seconds")
+                logger.info(str(count)+" records parsed after "+to_secs(time.perf_counter() - start_time)+" seconds")
             if 100 == count and testing:
                 break
             count = count + 1
@@ -272,7 +273,7 @@ def parse_json(
                     files['has_author'].write(format(has_author_row))
                     #files['is_author_of'].write(format(is_author_of_row))
 
-    logging.info(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
+    logger.info(str(count)+" records written to csv after "+to_secs(time.perf_counter() - start_time)+" seconds")
 
     # return the list of file names for further processing!
     return output_files

@@ -1,7 +1,6 @@
 import logging
 import sys
 from datetime import datetime, timedelta
-logger = logging.getLogger(__name__)
 
 # setup logging
 logging.basicConfig(level=logging.INFO)

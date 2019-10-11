@@ -9,6 +9,7 @@ import py2neo
 import logging
 # setup logging
 
+logger = logging.getLogger(__name__)
 
 #default connection parameters
 HOST='localhost',
@@ -213,18 +214,20 @@ def verbose_query(graph, query):
 
     start=time.perf_counter()
 
-    logging.info(query)
+    logger.info(query)
     transaction = graph.begin(autocommit=False)
     try:
         cursor = transaction.run(query)
     except Exception as e:
         transaction.rollback()
-        logging.info(e)
+        logger.info(e)
         return None
     finally:
         transaction.commit() # or maybe not
-        logging.info(cursor.stats())
-        logging.info("Execution time: "+str(time.perf_counter()-start))
+        stats = cursor.stats()
+        for key in stats:
+            logger.info(key + ": "+ str(stats[key]))
+        logger.info("Execution time: "+str(time.perf_counter()-start))
 
     return cursor
 
@@ -235,11 +238,11 @@ def total_size(database):
 
 def make_index(graph,label,properties):
     start=time.perf_counter()
-    logging.info("Making index on :"+label+' ('+properties+')')
+    logger.info("Making index on :"+label+' ('+properties+')')
 
     graph.schema.create_index(label,properties)
 
-    logging.info("Execution time: "+str(time.perf_counter()-start))
+    logger.info("Execution time: "+str(time.perf_counter()-start))
 
 #make_index(graph,label,property):
 #    query='''CREATE INDEX ON :{l}({p})'''.format(l=label,p=property)
@@ -269,7 +272,7 @@ def delete_duplicate_relationships():
 
 def log_subprocess_output(pipe):
     for line in iter(pipe.readline, b''): # b'\n'-separated lines
-        logging.info('subprocess: %r', line)
+        logger.info('subprocess: %r', line)
 
 # This import requires a complete dictionary of files all at once
 # stored locally on disk, and is likely to run out of RAM for large imports
@@ -280,16 +283,16 @@ def admin_import(dict_of_csv_files):
         stdout_log = stack.enter_context(open('logs/import_csv.stdout','w'))
         stderr_log = stack.enter_context(open('logs/import_csv.stderr','w'))
         timer = stack.enter_context(open('logs/import_csv.timer','a+'))
-        logging.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+        logger.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import\n')
-        logging.info('Papers: '+ ','.join(dict_of_csv_files['papers'])+'\n')
-        logging.info('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
-        logging.info('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
-        logging.info('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
-        logging.info('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
+        logger.info('Papers: '+ ','.join(dict_of_csv_files['papers'])+'\n')
+        logger.info('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
+        logger.info('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
+        logger.info('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
+        logger.info('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
         #stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
 
-        logging.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+        logger.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
                 ' Starting neo4j-admin import')
 
         bash_commands= [
@@ -308,7 +311,7 @@ def admin_import(dict_of_csv_files):
                     #','.join(files['is_author_of'])
                     ]
 
-        logging.info(' '.join(bash_commands))
+        logger.info(' '.join(bash_commands))
 
         pipe = subprocess.call(
                 bash_commands,
@@ -318,7 +321,7 @@ def admin_import(dict_of_csv_files):
 
         log_subprocess_output(pipe)
 
-        logging.info(
+        logger.info(
                 "Number of files: "+str(len(dict_of_csv_files['papers']))+\
                 ", processing time: "+str(time.perf_counter()-start_time)
                 )
