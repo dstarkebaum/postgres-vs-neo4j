@@ -118,8 +118,15 @@ Check the results with `cypher-shell`:
 ## For postgres import
 - More to come soon
 
+Settings files:
+`sudo nano /etc/postgresql/10/main/postgresql.conf`
+`sudo nano /etc/postgresql/10/main/pg_hba.conf`
 
 
+`sudo service postgresql restart`
+
+logfile on Ubuntu
+`less /var/log/postgresql/postgresql-10-main.log`
 ## Increasing EBS Volume size
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modify-volume.html
 

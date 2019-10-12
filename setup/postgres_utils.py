@@ -75,6 +75,23 @@ def verbose_query(cursor, query):
     logger.info("Execution time: "+str(time.perf_counter()-start))
 
 
+@with_connection
+def vacuum_table(connection,table,analyze=True,verbose=True):
+    cursor=connection.cursor()
+    connection.set_session(autocommit=True)
+    ana=''
+    if analyze:
+        ana=', ANALYZE'
+    verb=''
+    if verbose:
+        verb=', VERBOSE'
+    query='''
+        VACUUM(FULL{a}{v}) {t}
+    '''.format(a=ana,v=verb,t=table)
+
+    verbose_query(cursor,query)
+    connection.set_session(autocommit=False)
+
 
 @with_connection
 def remove_duplicates(connection,table,columns):
@@ -202,6 +219,19 @@ def load_csv(file,table,headers,cursor):
     verbose_query(cursor, query)
 
 
+def cleanup_database():
+    remove_duplicates('authors',['id'])#,explain=True)
+    #set_primary_key('authors',index)
+    remove_duplicates('papers',['id'])#,explain=True)
+    #set_primary_key('papers',index)
+    #remove_duplicates('incits',['id','incit_id'])
+    #remove_duplicates('outcits',['id','outcit_id'])
+    vacuum_table('authors')
+    vacuum_table('papers')
+    vacuum_table('outcits')
+    vacuum_table('incits')
+    vacuum_table('has_author')
+
 def creat_all_indexes():
 
     # TODO --> DONE: Create index on authors and paper_authors and remove duplicate rows
@@ -212,15 +242,12 @@ def creat_all_indexes():
     #order by 1,2,3
 
 
-    remove_duplicates('authors',['id'])#,explain=True)
-    index = create_index('authors',['id'],unique=True,primary=True)#,explain=True)
-    set_primary_key('authors',index)
-    create_index('papers',['id'],unique=True,primary=True)
+    index = create_index('authors',['id'])#,unique=True,primary=True)#,explain=True)
+
+    create_index('papers',['id'])#,unique=True,primary=True)
     create_index('paper_authors',['author_id'])
     create_index('paper_authors',['paper_id'])
 
-    remove_duplicates('incits',['id','incit_id'])
-    remove_duplicates('outcits',['id','outcit_id'])
 
     create_index('incits',['id'])
     create_index('outcits',['id'])
