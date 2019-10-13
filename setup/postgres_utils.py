@@ -94,7 +94,7 @@ def vacuum_table(connection,table,analyze=True,verbose=True):
 
 
 @with_connection
-def remove_duplicates(connection,table,columns):
+def remove_duplicates_faster(connection,table,columns):
     cursor = connection.cursor()
     start=time.perf_counter()
     # build up combined conditions from multiple columns
@@ -111,6 +111,30 @@ def remove_duplicates(connection,table,columns):
     logger.info(str(time.perf_counter()-start) + " s to remove duplicates " +
             "from {t}({c})".format(t=table,c=','.join(columns))
             )
+
+
+@with_connection
+def remove_duplicates_faster(connection,table,column):
+    cursor = connection.cursor()
+    start=time.perf_counter()
+    # build up combined conditions from multiple columns
+    query = '''
+        DELETE FROM {t} a USING (
+            SELECT MIN(ctid) as ctid, {c}
+                FROM {t}
+                GROUP BY {c} HAVING COUNT(*) > 1
+        ) b
+        WHERE a.{c} = b.{c}
+        AND a.ctid <> b.ctid;
+    '''.format(t=table,c=column)
+
+    verbose_query(cursor, query)
+
+    logger.info(str(time.perf_counter()-start) + " s to remove duplicates " +
+            "from {t}({c})".format(t=table,c=','.join(columns))
+            )
+
+
 
 @with_connection
 def create_index(
@@ -220,9 +244,9 @@ def load_csv(file,table,headers,cursor):
 
 
 def cleanup_database():
-    remove_duplicates('authors',['id'])#,explain=True)
+    remove_duplicates_faster('authors','id')#,explain=True)
     #set_primary_key('authors',index)
-    remove_duplicates('papers',['id'])#,explain=True)
+    remove_duplicates_faster('papers','id')#,explain=True)
     #set_primary_key('papers',index)
     #remove_duplicates('incits',['id','incit_id'])
     #remove_duplicates('outcits',['id','outcit_id'])
