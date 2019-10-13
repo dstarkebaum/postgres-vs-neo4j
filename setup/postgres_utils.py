@@ -11,19 +11,19 @@ logger = logging.getLogger(__name__)
 #from setup import host_config
 #def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
 
-# host_config = {
-#     'HOST':'localhost',
-#     'DATABASE':'ubuntu',
-#     'USER':'ubuntu',
-#     'PASSWORD':'ubuntu'
-#     }
-
 host_config = {
     'HOST':'localhost',
-    'DATABASE':'david',
-    'USER':'david',
-    'PASSWORD':'david'
+    'DATABASE':'ubuntu',
+    'USER':'ubuntu',
+    'PASSWORD':'ubuntu'
     }
+
+# host_config = {
+#     'HOST':'localhost',
+#     'DATABASE':'david',
+#     'USER':'david',
+#     'PASSWORD':'david'
+#     }
 
 headers = {}
 headers['papers'] = ('id','title','year','doi')
