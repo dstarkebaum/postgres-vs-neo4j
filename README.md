@@ -115,6 +115,13 @@ Ex: import just one set of compressed csv files in data/csv/s2-corpus-000-[table
 Check the results with `cypher-shell`:
 `CALL db.indexes();`
 
+Backup neo4j (community edition):
+https://www.postgresql.org/docs/10/backup-file.html
+`tar -cf backup.tar /var/lib/neo4j/data/databases/graph.db`
+"tar -c" = create archive
+"tar -f" = choose filename for the archive (next argument)
+
+
 ## For postgres import
 - More to come soon
 
@@ -127,6 +134,13 @@ Settings files:
 
 logfile on Ubuntu
 `less /var/log/postgresql/postgresql-10-main.log`
+
+Making a database backup:
+https://www.postgresql.org/docs/10/backup-file.html
+`tar -cf backup.tar /usr/local/pgsql/data`
+
+
+
 ## Increasing EBS Volume size
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modify-volume.html
 

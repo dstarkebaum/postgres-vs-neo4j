@@ -5,25 +5,9 @@ import os
 import time
 import subprocess
 import logging
-
+from setup import credentials
 logger = logging.getLogger(__name__)
 
-#from setup import host_config
-#def main(host='localhost',database='ubuntu',user='ubuntu',password='ubuntu'):
-
-host_config = {
-    'HOST':'localhost',
-    'DATABASE':'ubuntu',
-    'USER':'ubuntu',
-    'PASSWORD':'ubuntu'
-    }
-
-# host_config = {
-#     'HOST':'localhost',
-#     'DATABASE':'david',
-#     'USER':'david',
-#     'PASSWORD':'david'
-#     }
 
 headers = {}
 headers['papers'] = ('id','title','year','doi')
@@ -40,10 +24,10 @@ def with_connection(f):
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
-                        h=host_config['HOST'],
-                        db=host_config['DATABASE'],
-                        u=host_config['USER'],
-                        pw=host_config['PASSWORD'])
+                        h=credentials.neo4j[database]['host'],
+                        db=credentials.neo4j[database]['database'],
+                        u=credentials.neo4j[database]['user'],
+                        pw=credentials.neo4j[database]['password'])
                 )
         try:
             return_value = f(connection, *args, **kwargs)
@@ -131,7 +115,7 @@ def remove_duplicates_faster(connection,table,column):
     verbose_query(cursor, query)
 
     logger.info(str(time.perf_counter()-start) + " s to remove duplicates " +
-            "from {t}({c})".format(t=table,c=','.join(columns))
+            "from {t}({c})".format(t=table,c=column))
             )
 
 

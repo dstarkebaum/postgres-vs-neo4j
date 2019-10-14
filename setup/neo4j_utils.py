@@ -7,19 +7,13 @@ import time
 from datetime import datetime
 import py2neo
 import logging
+from setup import credentials
 # setup logging
 
 logger = logging.getLogger(__name__)
 
 #default connection parameters
-HOST='localhost',
-USER='neo4j',
-PASSWORD='ubuntu',
-AUTH=(USER,PASSWORD)
-PORT=7473#7687,
-SCHEME='http'#'bolt',
-SECURE=False,
-MAX_CONNECTIONS=40
+
 
 neo4j_headers = {}
 neo4j_headers['papers'] = ['id:ID(Paper)','title','year:INT','doi',':LABEL']
@@ -31,8 +25,11 @@ neo4j_headers['has_author'] = ['paper_id:START_ID(Paper)','author_id:END_ID(Auth
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
-def start_connection():
-    graph = py2neo.Graph(password='ubuntu')
+def start_connection(database='local'):
+    graph = py2neo.Graph(
+            user=credentials.neo4j[database]['user'],
+            password=credientials.neo4j[database]['password'],
+            )
         # auth=AUTH,
         # host=HOST,
         # user=USER,
