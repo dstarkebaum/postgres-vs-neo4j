@@ -51,10 +51,10 @@ def start_connection(database = 'local'):
     connection = psycopg2.connect('''
             host={h} dbname={db} user={u} password={pw}
             '''.format(
-                    h=credentials.neo4j[database]['host'],
-                    db=credentials.neo4j[database]['database'],
-                    u=credentials.neo4j[database]['user'],
-                    pw=credentials.neo4j[database]['password'])
+                    h=credentials.postgres[database]['host'],
+                    db=credentials.postgres[database]['database'],
+                    u=credentials.postgres[database]['user'],
+                    pw=credentials.postgres[database]['password'])
             )
     return connection
 
@@ -128,7 +128,6 @@ def remove_duplicates_faster(connection,table,column):
 
     logger.info(str(time.perf_counter()-start) + " s to remove duplicates " +
             "from {t}({c})".format(t=table,c=column))
-            )
 
 
 
@@ -278,20 +277,53 @@ def creat_all_indexes():
 
 
 
-def psql_import(csv_files):
+def psql_import(csv_files, database='local'):
     for table in csv_files:
-        subprocess.call([
-                'psql',
-                '-h', host_config['HOST'],
-                '-d', host_config['DATABASE'],
-                '-U', host_config['USER'],
-                '-c',   """
-                        \\copy {table}({headers})
-                        FROM {file}
-                        WITH (FORMAT CSV, HEADER, DELIMITER '|')
-                        """.format(table=table,file=csv_files[table], headers=", ".join(headers[table]))
-        ])
+        query = '''"\copy {table}({headers}) FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER '|')"'''.format(
+            table=table,
+            file=csv_files[table],
+            headers=", ".join(headers[table])
+        )
 
+        start=time.perf_counter()
+        proc = " ".join(['psql',
+                '-h', credentials.postgres[database]['host'],
+                '-d', credentials.postgres[database]['database'],
+                '-U', credentials.postgres[database]['user'],
+                '-c',query])
+        logger.info("psql import: \n"+query)
+        logger.info("subprocess call: \n"+proc)
+
+        subprocess.call([proc.encode('unicode_escape')], shell=True)
+        # subprocess.call('psql' + \
+        #         ' -h ' + credentials.postgres[database]['host'] + \
+        #         ' -d ' + credentials.postgres[database]['database'] + \
+        #         ' -U ' + credentials.postgres[database]['user'] + \
+        #         ' -c ' + query)
+
+        # subprocess.call([
+        #         'psql',
+        #         '-h', credentials.postgres[database]['host'],
+        #         '-d', credentials.postgres[database]['database'],
+        #         '-U', credentials.postgres[database]['user'],
+        #         '-c', query
+        #])
+
+        logger.info("Execution time: "+str(time.perf_counter()-start))
+
+
+# psql "postgresql://$DB_USER:$DB_PWD@$DB_SERVER/$DB_NAME"
+                # "postgresql://{user}:{pw}@{host}/{db}".format(
+                #     user=credentials.postgres[database]['user'],
+                #     pw=credentials.postgres[database]['pass'],
+                #     host=credentials.postgres[database]['host'],
+                #     db=credentials.postgres[database]['database']
+                # ),
+
+
+#                '-h', credentials.neo4j[database]['host'],
+#                '-d', credentials.neo4j[database]['database'],
+#                '-U', credentials.neo4j[database]['user'],
 
 #def load_tables():
 

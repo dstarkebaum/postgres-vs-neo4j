@@ -28,7 +28,7 @@ tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_autho
 def start_connection(database='local'):
     graph = py2neo.Graph(
             user=credentials.neo4j[database]['user'],
-            password=credientials.neo4j[database]['password'],
+            password=credientials.neo4j[database]['pass'],
             )
         # auth=AUTH,
         # host=HOST,

@@ -114,8 +114,10 @@ def populate_database(
         compress=True,
         engine='neo4j',
         testing=True,
+        make_int=False,
         cache=True,
-        use_previous=False):
+        use_previous=False,
+        database='local'):
 
     logger.info(os.getcwd())
 
@@ -150,6 +152,7 @@ def populate_database(
                 csv_path=csv_path,
                 file_num=i,
                 compress=compress,
+                make_int=make_int,
                 testing=testing,
                 cache=cache)
 
@@ -160,8 +163,8 @@ def populate_database(
             neo4j_utils.cypher_import(files)
 
         elif 'psql' == engine:
-            postgres_utils.psql_import(files)
-
+            postgres_utils.psql_import(files, database)
+        
         if cache:
             collection_of_files[i]=files
         else:
@@ -211,6 +214,7 @@ def download_and_extract_json(
         csv_path='data/csv',
         file_num=0,
         compress=True,
+        make_int=False,
         testing=True,
         cache=True,
         engine='neo4j'):
@@ -235,7 +239,7 @@ def download_and_extract_json(
     csv_files = json_to_csv.parse_json(
             json_local,
             csv_path,
-            make_int=False,
+            make_int=make_int,
             unique=True,
             neo4j=use_admin_headers,
             compress=compress,

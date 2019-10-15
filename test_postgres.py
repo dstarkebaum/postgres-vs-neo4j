@@ -9,10 +9,13 @@ pop.populate_database(
         prefix='s2-corpus',
         suffix='.csv',
         start=0,
-        end=2,
-        compress=True,
+        end=1,
+        compress=False,
         engine='psql',
-        testing=True)
+        make_int=True,
+        testing=True,
+        database='david'
+        )
 
 #pop.populate_neo4j()
 #pop.download_from_s3()

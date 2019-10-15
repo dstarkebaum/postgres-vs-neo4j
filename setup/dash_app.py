@@ -16,7 +16,7 @@ from setup import credentials
 
 def postgres_connect(database='int'):
     user = credentials.postgres[database]['user'],
-    password = credentials.postgres[database]['password'])
+    password = credentials.postgres[database]['pass'])
     db = credentials.postgres[database]['database'],
     host = credentials.postgres[database]['host'],
     url = 'postgresql://{user}:{password}@{host}:{port}/{database}'.url.format(
@@ -38,22 +38,35 @@ app = dash.Dash()
 server = app.server
 
 colors = {
-    'background': '#111111',
-    'text': '#7FDBFF'
+    'background': '#333333',
+    'text': '#00DD00'
 }
+
+graph = neo4j_connect()
+get_authors = '''
+MATCH (a:Author) return a.name
+'''
+
+authors = neo4j_utils.verbose_query(graph,get_authors)
+
+
 
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
     html.H1(
-        children='Hello Dash',
+        children='Postgres-vs-Neo4j',
         style={
             'textAlign': 'center',
             'color': colors['text']
         }
     ),
-    html.Div(children='Dash: A web application framework for Python.', style={
+    html.Div(children='Search for the shortest connection between two authors', style={
         'textAlign': 'center',
         'color': colors['text']
     }),
+    dcc.Input(
+        id='Author1'
+
+    )
     dcc.Graph(
         id='Graph1',
         figure={
