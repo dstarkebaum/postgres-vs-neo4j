@@ -264,12 +264,16 @@ def creat_all_indexes():
     index = create_index('authors',['id'])#,unique=True,primary=True)#,explain=True)
 
     create_index('papers',['id'])#,unique=True,primary=True)
-    create_index('paper_authors',['author_id'])
-    create_index('paper_authors',['paper_id'])
+    #create_index('paper_authors',['author_id'])
+    #create_index('paper_authors',['paper_id'])
+    create_index('has_author',['author_id'])
+    create_index('has_author',['paper_id'])
 
 
-    create_index('incits',['id'])
-    create_index('outcits',['id'])
+    #create_index('incits',['id'])
+    #create_index('outcits',['id'])
+    create_index('cites',['id'])
+    create_index('is_cited_by',['id'])
 
     create_index('authors',['name'],gin=True)
     create_index('papers',['title'],gin=True,gin_type='vector')
