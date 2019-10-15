@@ -17,18 +17,29 @@ headers['authors'] = ('id','name')
 headers['has_author'] = ('paper_id','author_id')
 
 
+#TODO: make this a class variable
+database='local'
+
+def set_database(db):
+    # report which database was chose, and also throw an exception
+    # if the database name given is not found in the dict
+    logger.info('Setting database to: ' + credentials.postgres[db]['host'])
+    global database = db
+
+def get_database():
+    return database
+
 #Decorator to handle database connections.
 def with_connection(f):
     def with_connection_(*args, **kwargs):
         # or use a pool, or a factory function...
-        database='local'
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
-                        h=credentials.neo4j[database]['host'],
-                        db=credentials.neo4j[database]['database'],
-                        u=credentials.neo4j[database]['user'],
-                        pw=credentials.neo4j[database]['password'])
+                        h=credentials.postgres[database]['host'],
+                        db=credentials.postgres[database]['database'],
+                        u=credentials.postgres[database]['user'],
+                        pw=credentials.postgres[database]['password'])
                 )
         try:
             return_value = f(connection, *args, **kwargs)
@@ -58,6 +69,19 @@ def start_connection(database = 'local'):
             )
     return connection
 
+
+def return_query(cursor, query):
+    start=time.perf_counter()
+    logger.info(cursor.mogrify(query).decode('utf-8'))
+    try:
+        cursor.execute(query)
+        logger.info("Execution time: "+str(time.perf_counter()-start))
+        return ((time.perf_counter()-start),cursor)
+    except (psycopg2.ProgrammingError, psycopg2.errors.DuplicateTable) as error:
+        logger.info(error)
+        return None
+
+
 def verbose_query(cursor, query):
     start=time.perf_counter()
     logger.info(cursor.mogrify(query).decode('utf-8'))
@@ -69,6 +93,7 @@ def verbose_query(cursor, query):
         logger.info(error)
 
     logger.info("Execution time: "+str(time.perf_counter()-start))
+    return (time.perf_counter()-start)
 
 
 @with_connection
