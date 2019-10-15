@@ -251,7 +251,7 @@ def cleanup_database():
     vacuum_table('incits')
     vacuum_table('has_author')
 
-def creat_all_indexes():
+def create_all_indexes():
 
     # TODO --> DONE: Create index on authors and paper_authors and remove duplicate rows
     # get list of tables and columns in schema
@@ -261,8 +261,7 @@ def creat_all_indexes():
     #order by 1,2,3
 
 
-    index = create_index('authors',['id'])#,unique=True,primary=True)#,explain=True)
-
+    create_index('authors',['id'])#,unique=True,primary=True)#,explain=True)
     create_index('papers',['id'])#,unique=True,primary=True)
     #create_index('paper_authors',['author_id'])
     #create_index('paper_authors',['paper_id'])
