@@ -24,7 +24,8 @@ def set_database(db):
     # report which database was chose, and also throw an exception
     # if the database name given is not found in the dict
     logger.info('Setting database to: ' + credentials.postgres[db]['host'])
-    global database = db
+    global database
+    database = db
 
 def get_database():
     return database
