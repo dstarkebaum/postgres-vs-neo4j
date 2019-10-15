@@ -21,6 +21,7 @@ headers['has_author'] = ('paper_id','author_id')
 def with_connection(f):
     def with_connection_(*args, **kwargs):
         # or use a pool, or a factory function...
+        database='local'
         connection = psycopg2.connect('''
                 host={h} dbname={db} user={u} password={pw}
                 '''.format(
@@ -36,7 +37,7 @@ def with_connection(f):
             logger.info(f.__name__+" failed!")
             raise
         else:
-            connection.commit() # or maybe not
+            connection.commit()
             logger.info(f.__name__+" success!")
         finally:
             connection.close()
@@ -45,6 +46,17 @@ def with_connection(f):
 
     return with_connection_
 
+
+def start_connection(database = 'local'):
+    connection = psycopg2.connect('''
+            host={h} dbname={db} user={u} password={pw}
+            '''.format(
+                    h=credentials.neo4j[database]['host'],
+                    db=credentials.neo4j[database]['database'],
+                    u=credentials.neo4j[database]['user'],
+                    pw=credentials.neo4j[database]['password'])
+            )
+    return connection
 
 def verbose_query(cursor, query):
     start=time.perf_counter()

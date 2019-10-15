@@ -22,10 +22,10 @@ awscli=1.14.44-1ubuntu1
 # install python tools
 sudo apt-get --yes install \
   python3-dev=3.6.7-1~18.04 \
+  python3-pip=9.0.1-2.3~ubuntu1.18.04.1 \
   python3-numpy=1:1.13.3-2ubuntu1 \
-  python3-pandas=0.22.0-4 \
-  ipython3=5.5.0-1
-  #python3-pip=9.0.1-2.3~ubuntu1.18.04.1 \
+  python3-pandas=0.22.0-4
+  #ipython3=5.5.0-1
   #python3-scipy=0.19.1-2ubuntu1 \
 
 # install PostgreSQL (assuming version 10)
@@ -36,7 +36,9 @@ sudo apt-get --yes install \
 
 # install python packages
 #pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
-yes | pip3 install psycopg2 boto3
+sudo -u ubuntu sh -c 'yes | pip3 install wheel'
+sudo -u ubuntu sh -c 'yes | pip3 install boto3 py2neo psycopg2'
+#yes | pip3 install wheel psycopg2 boto3
 
 # create a PostgreSQL history file to record queries to the database
 touch ~/.psql_history
@@ -78,19 +80,19 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $USER TO $USER;"
 # sudo nano /etc/postgresql/10/main/postgresql.conf
 
 # Clone the github repository to ubuntu home directory (not to root directory!)
-cd /home/ubuntu
-sudo -u ubuntu git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
+#cd /home/ubuntu
+#sudo -u ubuntu git clone https://github.com/dstarkebaum/dstarkebaum.github.io.git
 
-sudo cp /home/ubuntu/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
+#sudo cp /home/ubuntu/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/pg_hba.conf
 #sudo cp /home/ubuntu/dstarkebaum.github.io/pg_hba.conf /etc/postgresql/10/main/postgresql.conf
 
 # Once all of the settigs are correct, then restart the sql service
-sudo /etc/init.d/postgresql restart
+#sudo /etc/init.d/postgresql restart
 
 
-wget https://raw.githubusercontent.com/pixelb/ps_mem/master/ps_mem.py
-sudo install ps_mem.py /usr/local/bin/ps_mem
-rm ps_mem.py
+#wget https://raw.githubusercontent.com/pixelb/ps_mem/master/ps_mem.py
+#sudo install ps_mem.py /usr/local/bin/ps_mem
+#rm ps_mem.py
 
 # Check status of database with:
 # pg_lsclusters

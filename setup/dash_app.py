@@ -8,35 +8,29 @@ import sqlalchemy.dialects
 import py2neo
 import psycopg2
 import plotly.graph_objs as go
+from setup import neo4j_utils
+from setup import postgres_utils
+from setup import credentials
 
 
-def postgres_connect():
-    user = 'ubuntu'
-    password = 'ubuntu'
-    db = 'ubuntu'
-    host = '10.0.0.6'
+
+def postgres_connect(database='int'):
+    user = credentials.postgres[database]['user'],
+    password = credentials.postgres[database]['password'])
+    db = credentials.postgres[database]['database'],
+    host = credentials.postgres[database]['host'],
     url = 'postgresql://{user}:{password}@{host}:{port}/{database}'.url.format(
             user=user,password=password,host=host,database=database
     )
     con = sqlalchemy.create_engine(url, client_encoding='utf8')
     return con
 
-def noo4j_connect():
-    user = 'neo4j'
-    password = 'insight'
-    db = 'neo4j'
-    host = '10.0.0.6'
-    graph = Graph(host="10.0.0.11",password="password")
-    url = 'postgresql://{user}:{password}@{host}:{port}/{database}'.url.format(
-            user=user,password=password,host=host,database=database
-    )
-    con = sqlalchemy.create_engine(url, client_encoding='utf8')
-    return con
-
-
-#postgres = postgres_connect()
-
-
+def neo4j_connect(database='medium'):
+    user = credentials.neo4j[database]['user'],
+    password = credentials.neo4j[database]['password'])
+    host = credentials.neo4j[database]['host'],
+    graph = Graph(user=user,host=host,password=password)
+    return graph
 
 # The dash app
 app = dash.Dash()
