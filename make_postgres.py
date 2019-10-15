@@ -2,7 +2,6 @@
 import setup.populate_database as pop
 import setup.postgres_utils as pgu
 
-pgu.main()
 pop.populate_database(
         corpus_path='data/s2-corpus',
         csv_path='data/csv',
@@ -13,9 +12,13 @@ pop.populate_database(
         compress=False,
         engine='psql',
         make_int=True,
+        use_previous=True,
         testing=False,
         database='local'
         )
+
+pgu.create_all_indexes()
+pgu.cleanup_database()
 
 #pop.populate_neo4j()
 #pop.download_from_s3()

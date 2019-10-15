@@ -100,6 +100,7 @@ def verbose_query(cursor, query):
 @with_connection
 def vacuum_table(connection,table,analyze=True,verbose=True):
     cursor=connection.cursor()
+    commit_status = connection.autocommit
     connection.set_session(autocommit=True)
     ana=''
     if analyze:
@@ -112,7 +113,7 @@ def vacuum_table(connection,table,analyze=True,verbose=True):
     '''.format(a=ana,v=verb,t=table)
 
     verbose_query(cursor,query)
-    connection.set_session(autocommit=False)
+    connection.set_session(autocommit=commit_status)
 
 
 @with_connection
@@ -264,21 +265,33 @@ def load_csv(file,table,headers,cursor):
     verbose_query(cursor, query)
 
 
-def cleanup_database():
+@with_connection
+def make_primary_key(connection,table,column):
+    cursor = connection.cursor()
+    query = '''ALTER TABLE {table} ADD PRIMARY KEY ({column})'''.format(
+        table=table,column=column
+    )
+    verbose_query(cursor,query)
+
+
+def cleanup_database(database='local'):
+    set_database(database)
+
     remove_duplicates_faster('authors','id')#,explain=True)
     #set_primary_key('authors',index)
     remove_duplicates_faster('papers','id')#,explain=True)
     #set_primary_key('papers',index)
     #remove_duplicates('incits',['id','incit_id'])
     #remove_duplicates('outcits',['id','outcit_id'])
-    vacuum_table('authors')
-    vacuum_table('papers')
-    vacuum_table('outcits')
-    vacuum_table('incits')
-    vacuum_table('has_author')
+    make_primary_key('papers','id')
+    make_primary_key('authors','id')
 
-def create_all_indexes():
+    for table in headers:
+        vacuum_table(table)
 
+
+def create_all_indexes(database='local'):
+    set_database(database)
     # TODO --> DONE: Create index on authors and paper_authors and remove duplicate rows
     # get list of tables and columns in schema
     #'''select table_schema, table_name, column_name
@@ -308,7 +321,8 @@ def create_all_indexes():
 
 def psql_import(csv_files, database='local'):
     for table in csv_files:
-        query = '''"\copy {table}({headers}) FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER '|')"'''.format(
+        #query = '''"\copy {table}({headers}) FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER '|')"'''.format(
+        query = '''"\copy {table} FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER '|')"'''.format(
             table=table,
             file=csv_files[table],
             headers=", ".join(headers[table])
