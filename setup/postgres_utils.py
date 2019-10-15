@@ -40,7 +40,7 @@ def with_connection(f):
                         h=credentials.postgres[database]['host'],
                         db=credentials.postgres[database]['database'],
                         u=credentials.postgres[database]['user'],
-                        pw=credentials.postgres[database]['password'])
+                        pw=credentials.postgres[database]['pass'])
                 )
         try:
             return_value = f(connection, *args, **kwargs)
@@ -66,7 +66,7 @@ def start_connection(database = 'local'):
                     h=credentials.postgres[database]['host'],
                     db=credentials.postgres[database]['database'],
                     u=credentials.postgres[database]['user'],
-                    pw=credentials.postgres[database]['password'])
+                    pw=credentials.postgres[database]['pass'])
             )
     return connection
 
