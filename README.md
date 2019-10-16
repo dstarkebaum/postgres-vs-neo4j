@@ -121,6 +121,12 @@ https://www.postgresql.org/docs/10/backup-file.html
 "tar -c" = create archive
 "tar -f" = choose filename for the archive (next argument)
 
+psql:
+create extension btree_gin;
+create extension pg_stat_statements;
+create extension pg_trgm;
+\dx
+
 
 ## For postgres import
 - More to come soon

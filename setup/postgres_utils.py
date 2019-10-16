@@ -70,14 +70,18 @@ def start_connection(database = 'local'):
             )
     return connection
 
-
-def return_query(cursor, query):
+@with_connection
+def return_query(connection, query):
+    cursor=connection.cursor()
     start=time.perf_counter()
     logger.info(cursor.mogrify(query).decode('utf-8'))
     try:
         cursor.execute(query)
         logger.info("Execution time: "+str(time.perf_counter()-start))
-        return ((time.perf_counter()-start),cursor)
+        return dict(
+                time = (time.perf_counter()-start),
+                results = [record for record in cursor]
+                )
     except (psycopg2.ProgrammingError, psycopg2.errors.DuplicateTable) as error:
         logger.info(error)
         return None
@@ -98,7 +102,7 @@ def verbose_query(cursor, query):
 
 
 @with_connection
-def vacuum_table(connection,table,analyze=True,verbose=True):
+def vacuum_table(connection,table,analyze=False,verbose=False):
     cursor=connection.cursor()
     commit_status = connection.autocommit
     connection.set_session(autocommit=True)

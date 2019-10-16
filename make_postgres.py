@@ -17,8 +17,8 @@ pop.populate_database(
         database='local'
         )
 
-pgu.create_all_indexes()
-pgu.cleanup_database()
+pgu.create_all_indexes(database='local')
+pgu.cleanup_database(database='local')
 
 #pop.populate_neo4j()
 #pop.download_from_s3()
