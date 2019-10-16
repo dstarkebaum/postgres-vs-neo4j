@@ -69,10 +69,16 @@ app.layout = html.Div(children=[
             ),
         #'color': colors['text']
     ),
-    html.Div([
 #=================================Search Bar====================================
+    html.Div([
 #                      ===========Postgres=============
-        #html.Div([
+        html.Div([
+            html.Div(
+                children='Postgres:',
+                #style= dict(
+                #    textAlign = 'center'
+                #    ),
+                ),
             # search bar for author. debaunce=True means they have to hit enter to start
             dcc.Input(
                 id='postgres_search_bar',
@@ -82,12 +88,6 @@ app.layout = html.Div(children=[
                 size = '40',
                 debounce=True,
                 ),
-            #], style = dict(
-            #        width = '20%',
-            #        display = 'table-cell',
-            #        ),
-        #),
-        #html.Div([
             # Button for executing search (alternative to pressing enter)
             html.Button(
                 children='Search',
@@ -95,13 +95,19 @@ app.layout = html.Div(children=[
                 type='submit',
                 n_clicks=0,
                 ),
-            #], style = dict(
-            #        display = 'table-cell',
-            #        ),
-        ]),
+            ], style = dict(
+                    width = '50%',
+                    display = 'table-cell',
+                    ),
+        ),
 #                      ===========Neo4j=============
-    html.Div([
-        #html.Div([
+        html.Div([
+            html.Div(
+                children='Neo4j:',
+                #style= dict(
+                #    textAlign = 'center'
+                #    ),
+                ),
             # search bar for author. debaunce=True means they have to hit enter to start
             dcc.Input(
                 id='neo4j_search_bar',
@@ -111,12 +117,6 @@ app.layout = html.Div(children=[
                 size = '40',
                 debounce=True,
                 ),
-            #], style = dict(
-            #        width = '20%',
-            #        display = 'table-cell',
-            #        ),
-        #),
-        #html.Div([
             # Button for executing search (alternative to pressing enter)
             html.Button(
                 children='Search',
@@ -124,105 +124,140 @@ app.layout = html.Div(children=[
                 type='submit',
                 n_clicks=0,
                 ),
-            #], style = dict(
-            #        display = 'table-cell',
-            #        ),
-        #),
-        #], style = dict(
-        #        width = '100%',
-        #        display = 'table',
-        #        ),
-        ]),
+            ], style = dict(
+                    width = '50%',
+                    display = 'table-cell',
+                    ),
+        ),
+
+        ], style = dict(
+            width = '100%',
+            display = 'table',
+            )
+    ),
+
 #===============================Author Dropdown=================================
+    html.Div([
 #                      ===========Postgres=============
-    html.Div([
-        html.Div(
-            id='postgres_author_query',
-            children='',
+        html.Div([
+            html.Div(
+                id='postgres_author_query',
+                children='',
+                ),
+            dcc.Dropdown(
+                id='postgres_author_list',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Authors...',
+                value='',
+                ),
+
+            html.Div(
+                id='postgres_author_search_time',
+                children='',
+                # style= dict(
+                #     textAlign = 'center'
+                #     ),
+                ),
+            ], style = dict(
+                    width = '50%',
+                    display = 'table-cell',
+                    ),
             ),
-        dcc.Dropdown(
-            id='postgres_author_list',
-            #options=[{'label': '', 'value': ''}],
-            multi=False,
-            placeholder='Authors...',
-            value='',
+    #                      ===========Neo4j=============
+        html.Div([
+            html.Div(
+                id='neo4j_author_query',
+                children='',
+                ),
+            dcc.Dropdown(
+                id='neo4j_author_list',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Authors...',
+                value='',
+                ),
+
+            html.Div(
+                id='neo4j_author_search_time',
+                children='',
+                # style= dict(
+                #     textAlign = 'center'
+                #     ),
+                ),
+            ], style = dict(
+                    width = '50%',
+                    display = 'table-cell',
+                    ),
             ),
 
-        html.Div(
-            id='postgres_author_search_time',
-            children='',
-            # style= dict(
-            #     textAlign = 'center'
-            #     ),
-            ),
-        ]),
-#                      ===========Neo4j=============
-    html.Div([
-        html.Div(
-            id='neo4j_author_query',
-            children='',
-            ),
-        dcc.Dropdown(
-            id='neo4j_author_list',
-            #options=[{'label': '', 'value': ''}],
-            multi=False,
-            placeholder='Authors...',
-            value='',
-            ),
+        ], style = dict(
+            width = '100%',
+            display = 'table',
+            )
+    ),
 
-        html.Div(
-            id='neo4j_author_search_time',
-            children='',
-            # style= dict(
-            #     textAlign = 'center'
-            #     ),
-            ),
-        ]),
+
 #===============================Papers dropdown=================================
+    html.Div([
 #                      ===========Postgres=============
-    html.Div([
-        html.Div(
-            id='postgres_papers_query',
-            children='',
+        html.Div([
+            html.Div(
+                id='postgres_papers_query',
+                children='',
+                ),
+            dcc.Dropdown(
+                id='postgres_papers_list',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Papers...',
+                value='',
+                ),
+            html.Div(
+                id='postgres_papers_search_time',
+                children='',
+                # style= dict(
+                #     textAlign = 'center'
+                #     ),
+                ),
+
+            ], style = dict(
+                    width = '50%',
+                    display = 'table-cell',
+                    ),
             ),
-        dcc.Dropdown(
-            id='postgres_papers_list',
-            #options=[{'label': '', 'value': ''}],
-            multi=False,
-            placeholder='Papers...',
-            value='',
-            ),
-        html.Div(
-            id='postgres_papers_search_time',
-            children='',
-            # style= dict(
-            #     textAlign = 'center'
-            #     ),
+    #                      ===========Neo4j=============
+        html.Div([
+            html.Div(
+                id='neo4j_papers_query',
+                children='',
+                ),
+            dcc.Dropdown(
+                id='neo4j_papers_list',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Papers...',
+                value='',
+                ),
+            html.Div(
+                id='neo4j_papers_search_time',
+                children='',
+                # style= dict(
+                #     textAlign = 'center'
+                #     ),
+                ),
+
+            ], style = dict(
+                    width = '50%',
+                    display = 'table-cell',
+                    ),
             ),
 
-        ]),
-#                      ===========Neo4j=============
-    html.Div([
-        html.Div(
-            id='neo4j_papers_query',
-            children='',
-            ),
-        dcc.Dropdown(
-            id='neo4j_papers_list',
-            #options=[{'label': '', 'value': ''}],
-            multi=False,
-            placeholder='Papers...',
-            value='',
-            ),
-        html.Div(
-            id='neo4j_papers_search_time',
-            children='',
-            # style= dict(
-            #     textAlign = 'center'
-            #     ),
-            ),
-
-        ]),
+        ], style = dict(
+            width = '100%',
+            display = 'table',
+            )
+    ),
 ]) # end app layout
 
 
