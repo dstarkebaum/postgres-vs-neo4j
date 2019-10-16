@@ -28,7 +28,7 @@ tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_autho
 def start_connection(database='local'):
     graph = py2neo.Graph(
             user=credentials.neo4j[database]['user'],
-            password=credientials.neo4j[database]['pass'],
+            password=credentials.neo4j[database]['pass'],
             )
         # auth=AUTH,
         # host=HOST,
@@ -208,6 +208,28 @@ def make_cypher_queries(
 
     return cypher
 
+
+
+def return_query(graph, query):
+
+    start=time.perf_counter()
+    logger.info(query)
+    transaction = graph.begin(autocommit=False)
+
+    try:
+        cursor = transaction.run(query)
+    except Exception as e:
+        transaction.rollback()
+        logger.info(e)
+        return None
+    finally:
+        transaction.commit() # or maybe not
+        logger.info("Execution time: "+str(time.perf_counter()-start))
+
+    return dict(
+            time = (time.perf_counter()-start),
+            results = [record.values() for record in cursor]
+            )
 
 def verbose_query(graph, query):
 
