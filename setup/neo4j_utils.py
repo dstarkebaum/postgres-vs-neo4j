@@ -29,9 +29,9 @@ def start_connection(database='local'):
     graph = py2neo.Graph(
             user=credentials.neo4j[database]['user'],
             password=credentials.neo4j[database]['pass'],
+            host=credentials.neo4j[database]['host'],
             )
         # auth=AUTH,
-        # host=HOST,
         # user=USER,
         # password=PASSWORD,
         # port=PORT,

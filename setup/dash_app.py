@@ -45,7 +45,7 @@ server = app.server
 #     'text': '#00DD00'
 # }
 
-graph = n4u.start_connection('local')
+graph = n4u.start_connection('medium-remote')
 #sqldb = postgres_connect()
 
 
@@ -69,6 +69,83 @@ app.layout = html.Div(children=[
             ),
         #'color': colors['text']
     ),
+
+#===============================Set Database====================================
+    html.Div([
+#                      ===========Postgres=============
+        html.Div([
+
+            dcc.Dropdown(
+                id='postgres_set_database',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Postgres Database...',
+                options=[{'label': key, 'value': key} for key in credentials.postgres],
+                ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
+            ),
+    #                      ===========Neo4j=============
+        html.Div([
+            dcc.Dropdown(
+                id='neo4j_set_database',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Neo4j Database...',
+                options=[{'label': key, 'value': key} for key in credentials.neo4j],
+                ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
+            ),
+
+        ], style = dict(
+            width = '100%',
+            display = 'table',
+            )
+    ),
+    html.Div([
+#===============================Count Database==================================
+#                      ===========Postgres=============
+        html.Div([
+            html.Div(
+                children='Postres Papers: ',
+                ),
+            html.Div(
+                id='postgres_papers_count',
+                children='',
+                ),
+            html.Div(
+                children='Authors: ',
+                ),
+            html.Div(
+                id='postgres_authors_count',
+                children='',
+                ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
+            ),
+    #                      ===========Neo4j=============
+        html.Div([
+            html.Div(
+                children='Neo4j Papers: ',
+                ),
+            html.Div(
+                id='neo4j_papers_count',
+                children='',
+                ),
+            html.Div(
+                children='Authors: ',
+                ),
+            html.Div(
+                id='neo4j_authors_count',
+                children='',
+                ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
+            ),
+
+        ], style = dict(
+            width = '100%',
+            display = 'table',
+            )
+    ),
+
 #=================================Search Bar====================================
     html.Div([
 #                      ===========Postgres=============
@@ -95,10 +172,7 @@ app.layout = html.Div(children=[
                 type='submit',
                 n_clicks=0,
                 ),
-            ], style = dict(
-                    width = '50%',
-                    display = 'table-cell',
-                    ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
         ),
 #                      ===========Neo4j=============
         html.Div([
@@ -124,26 +198,23 @@ app.layout = html.Div(children=[
                 type='submit',
                 n_clicks=0,
                 ),
-            ], style = dict(
-                    width = '50%',
-                    display = 'table-cell',
-                    ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
         ),
 
-        ], style = dict(
-            width = '100%',
-            display = 'table',
-            )
+        ], style = {'width': '100%', 'display': 'table'}
     ),
 
 #===============================Author Dropdown=================================
     html.Div([
 #                      ===========Postgres=============
         html.Div([
-            html.Div(
+
+            dcc.Textarea(
                 id='postgres_author_query',
-                children='',
-                ),
+                placeholder='Postgres author query...',
+                #value='This is a TextArea component',
+                style={'width': '100%'},
+            ),
             dcc.Dropdown(
                 id='postgres_author_list',
                 #options=[{'label': '', 'value': ''}],
@@ -159,17 +230,16 @@ app.layout = html.Div(children=[
                 #     textAlign = 'center'
                 #     ),
                 ),
-            ], style = dict(
-                    width = '50%',
-                    display = 'table-cell',
-                    ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
             ),
     #                      ===========Neo4j=============
         html.Div([
-            html.Div(
+            dcc.Textarea(
                 id='neo4j_author_query',
-                children='',
-                ),
+                placeholder='Neo4j author query...',
+                #value='This is a TextArea component',
+                style={'width': '100%'},
+            ),
             dcc.Dropdown(
                 id='neo4j_author_list',
                 #options=[{'label': '', 'value': ''}],
@@ -185,10 +255,7 @@ app.layout = html.Div(children=[
                 #     textAlign = 'center'
                 #     ),
                 ),
-            ], style = dict(
-                    width = '50%',
-                    display = 'table-cell',
-                    ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
             ),
 
         ], style = dict(
@@ -202,10 +269,12 @@ app.layout = html.Div(children=[
     html.Div([
 #                      ===========Postgres=============
         html.Div([
-            html.Div(
+            dcc.Textarea(
                 id='postgres_papers_query',
-                children='',
-                ),
+                placeholder='Postgres paper query...',
+                #value='This is a TextArea component',
+                style={'width': '100%'},
+            ),
             dcc.Dropdown(
                 id='postgres_papers_list',
                 #options=[{'label': '', 'value': ''}],
@@ -221,17 +290,16 @@ app.layout = html.Div(children=[
                 #     ),
                 ),
 
-            ], style = dict(
-                    width = '50%',
-                    display = 'table-cell',
-                    ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
             ),
     #                      ===========Neo4j=============
         html.Div([
-            html.Div(
+            dcc.Textarea(
                 id='neo4j_papers_query',
-                children='',
-                ),
+                placeholder='Neo4j paper query...',
+                #value='This is a TextArea component',
+                style={'width': '100%'},
+            ),
             dcc.Dropdown(
                 id='neo4j_papers_list',
                 #options=[{'label': '', 'value': ''}],
@@ -247,26 +315,118 @@ app.layout = html.Div(children=[
                 #     ),
                 ),
 
-            ], style = dict(
-                    width = '50%',
-                    display = 'table-cell',
-                    ),
+            ], style = {'width': '50%', 'display': 'table-cell'}
             ),
 
-        ], style = dict(
-            width = '100%',
-            display = 'table',
-            )
+        ], style = {'width': '100%', 'display': 'table'}
     ),
+
+#===============================Cites dropdown=================================
+    html.Div([
+#                      ===========Postgres=============
+        html.Div([
+            dcc.Textarea(
+                id='postgres_cites_query',
+                placeholder='Postgres cites query...',
+                #value='This is a TextArea component',
+                style={'width': '100%'},
+            ),
+            dcc.Dropdown(
+                id='postgres_cites_list',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Cites...',
+                value='',
+                ),
+            html.Div(
+                id='postgres_cites_search_time',
+                children='',
+                # style= dict(
+                #     textAlign = 'center'
+                #     ),
+                ),
+
+            ], style = {'width': '50%', 'display': 'table-cell'}
+            ),
+    #                      ===========Neo4j=============
+        html.Div([
+            dcc.Textarea(
+                id='neo4j_cites_query',
+                placeholder='Neo4j cites query...',
+                #value='This is a TextArea component',
+                style={'width': '100%'},
+            ),
+            dcc.Dropdown(
+                id='neo4j_cites_list',
+                #options=[{'label': '', 'value': ''}],
+                multi=False,
+                placeholder='Cites...',
+                value='',
+                ),
+            html.Div(
+                id='neo4j_cites_search_time',
+                children='',
+                # style= dict(
+                #     textAlign = 'center'
+                #     ),
+                ),
+
+            ], style = {'width': '50%', 'display': 'table-cell'}
+            ),
+
+        ], style = {'width': '100%', 'display': 'table'}
+    ),
+
 ]) # end app layout
 
 
 #===============================Callbacks=======================================
 
+#===============================Set Database====================================
+#                      ===========Postgres=============
+@app.callback([
+    dep.Output('postgres_papers_count','children'),
+    dep.Output('postgres_authors_count','children'),
+    ],
+    [dep.Input('postgres_set_database', 'value')],)
+def set_postgres_database(database):
+
+    if database in credentials.postgres:
+        pgu.set_database(database)
+        query_papers = "SELECT count(*) FROM papers;"
+        query_authors = "SELECT count(*) FROM authors;"
+
+        num_papers = pgu.return_query(query_papers)['results'][0][0]
+        num_authors = pgu.return_query(query_authors)['results'][0][0]
+        return [num_papers,num_authors]
+    else:
+        return [0,0]
+
+#                      ===========Neo4j=============
+@app.callback([
+    dep.Output('neo4j_papers_count','children'),
+    dep.Output('neo4j_authors_count','children'),
+    ],
+[dep.Input('neo4j_set_database', 'value')],)
+def set_neo4j_database(database):
+
+    # only allow alphanumeric inputs
+    if database in credentials.neo4j:
+        global graph
+        graph = n4u.start_connection(database)
+        query_papers = "MATCH (p:Paper) RETURN count(p);"
+        query_authors = "MATCH (a:Author) RETURN count(a);"
+
+        num_papers = n4u.return_query(graph,query_papers)['results'][0][0]
+        num_authors = n4u.return_query(graph,query_authors)['results'][0][0]
+        return [num_papers,num_authors]
+    else:
+        return [0,0]
+
 #===============================Author search===================================
 #                      ===========Postgres=============
 @app.callback([
-    dep.Output('postgres_author_query', 'children'),
+    dep.Output('postgres_author_query', 'value'),
     dep.Output('postgres_author_list', 'options'),
     dep.Output('postgres_author_search_time', 'children'),
     ],
@@ -277,12 +437,12 @@ def update_postgres_author_list(search_string):
     pattern = re.compile("[A-Za-z0-9]+")
     if pattern.fullmatch(search_string) is not None:
         query = '''
-            SELECT name, id FROM authors WHERE name ILIKE '%{name}%' LIMIT 20
+            SELECT name, id FROM authors WHERE name ILIKE '%{name}%' LIMIT 20;
         '''.format(name=search_string)
 
         r = pgu.return_query(query)
         return [
-            query,
+            query.strip(),
             [{'label':name,'value':str(id)} for (name,id) in r['results']],
             "{:1.2f} ms".format(r['time']*1000),
             ]
@@ -297,7 +457,7 @@ def update_postgres_author_list(search_string):
 
 #                      ===========Neo4j=============
 @app.callback([
-    dep.Output('neo4j_author_query', 'children'),
+    dep.Output('neo4j_author_query', 'value'),
     dep.Output('neo4j_author_list', 'options'),
     dep.Output('neo4j_author_search_time', 'children'),
     ],
@@ -308,12 +468,12 @@ def update_neo4j_author_list(search_string):
     pattern = re.compile("[A-Za-z0-9]+")
     if pattern.fullmatch(search_string) is not None:
         query = '''
-            MATCH (a:Author) WHERE a.name =~ '.*{name}.*' RETURN a.name,a.id LIMIT 20;
+            MATCH (a:Author) WHERE a.name =~ '(?i).*{name}.*' RETURN a.name, a.id LIMIT 20;
         '''.format(name=search_string)
 
         r = n4u.return_query(graph,query)
         return [
-            query,
+            query.strip(),
             [{'label':name,'value':str(id)} for (name,id) in r['results']],
             "{:1.2f} ms".format(r['time']*1000),
             ]
@@ -330,7 +490,7 @@ def update_neo4j_author_list(search_string):
 #===============================Paper search====================================
 #                      ===========Postgres=============
 @app.callback([
-    dep.Output('postgres_papers_query', 'children'),
+    dep.Output('postgres_papers_query', 'value'),
     dep.Output('postgres_papers_list', 'options'),
     dep.Output('postgres_papers_search_time', 'children'),
     ],
@@ -345,14 +505,14 @@ def update_postgres_papers_list(author_id):
             SELECT papers.title, papers.id FROM papers, (
                 select paper_id from has_author
                 where has_author.author_id = {author_id}
-            ) as z
-            where papers.id = z.paper_id;
+            ) as by_author
+            where papers.id = by_author.paper_id;
             '''.format(
                 author_id=author_id
                 )
         r = pgu.return_query(query)
         return [
-            query,
+            query.strip(),
             [{'label':title,'value':str(id)} for (title,id) in r['results']],
             "{:1.2f} ms".format(r['time']*1000),
             ]
@@ -367,7 +527,7 @@ def update_postgres_papers_list(author_id):
 
 #                      ===========Neo4j=============
 @app.callback([
-    dep.Output('neo4j_papers_query', 'children'),
+    dep.Output('neo4j_papers_query', 'value'),
     dep.Output('neo4j_papers_list', 'options'),
     dep.Output('neo4j_papers_search_time', 'children'),
     ],
@@ -380,13 +540,13 @@ def update_neo4j_papers_list(author_id):
         #print("Found match: " + string)
         query='''
             MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
-            WHERE a.id = "{author_id}" RETURN p.title,p.id;
+            WHERE a.id = "{author_id}" RETURN p.title, p.id;
             '''.format(
                 author_id=author_id
                 )
         r = n4u.return_query(graph,query)
         return [
-            query,
+            query.strip(),
             [{'label':title,'value':str(id)} for (title,id) in r['results']],
             "{:1.2f} ms".format(r['time']*1000),
             ]
@@ -395,7 +555,76 @@ def update_neo4j_papers_list(author_id):
         #print("No match")
         return [
             '',
-            [{'label':'Select and author to search Neo4j','value':''}],
+            [{'label':'Select an author to search Neo4j','value':''}],
+            "0.0 ms",
+            ]
+
+#===============================Cites search====================================
+#                      ===========Postgres=============
+@app.callback([
+    dep.Output('postgres_cites_query', 'value'),
+    dep.Output('postgres_cites_list', 'options'),
+    dep.Output('postgres_cites_search_time', 'children'),
+    ],
+    [dep.Input('postgres_papers_list', 'value')],
+)
+def update_postgres_cites_list(paper_id):
+
+    # only allow alphanumeric inputs
+    if paper_id is not '':
+        #print("Found match: " + string)
+        query='''
+            SELECT papers.title, papers.id FROM papers, (
+                select incit_id from is_cited_by
+                where is_cited_by.id = {target_id}
+            ) as citations
+            where papers.id = citations.incit_id;
+            '''.format(target_id=paper_id)
+        r = pgu.return_query(query)
+        return [
+            query.strip(),
+            [{'label':title,'value':str(id)} for (title,id) in r['results']],
+            "{:1.2f} ms".format(r['time']*1000),
+            ]
+    else:
+        # if not found match
+        #print("No match")
+        return [
+            '',
+            [{'label':'Select a paper to search Postgres','value':''}],
+            "0.0 ms",
+            ]
+
+#                      ===========Neo4j=============
+@app.callback([
+    dep.Output('neo4j_cites_query', 'value'),
+    dep.Output('neo4j_cites_list', 'options'),
+    dep.Output('neo4j_cites_search_time', 'children'),
+    ],
+    [dep.Input('neo4j_papers_list', 'value')],
+)
+def update_neo4j_cites_list(paper_id):
+
+    # only allow alphanumeric inputs
+    if paper_id is not '':
+        #print("Found match: " + string)
+        query='''
+            MATCH (p1:Paper)-[:CITES]->(p2:Paper)
+            WHERE p2.id = "{target_id}" RETURN p1.title,p1.id;
+            '''.format(target_id=paper_id)
+
+        r = n4u.return_query(graph,query)
+        return [
+            query.strip(),
+            [{'label':title,'value':str(id)} for (title,id) in r['results']],
+            "{:1.2f} ms".format(r['time']*1000),
+            ]
+    else:
+        # if not found match
+        #print("No match")
+        return [
+            '',
+            [{'label':'Select a paper to search Neo4j','value':''}],
             "0.0 ms",
             ]
 
