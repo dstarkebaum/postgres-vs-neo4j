@@ -146,6 +146,13 @@ https://www.postgresql.org/docs/10/backup-file.html
 `tar -cf backup.tar /usr/local/pgsql/data`
 
 
+## Clearing cache for benchmarking
+
+
+`sudo service postgresql stop` / `sudo neo4j stop`
+`sync && echo 3 | sudo tee /proc/sys/vm/drop_caches`
+`sudo service postgresql start` / `sudo neo4j start`
+
 
 ## Increasing EBS Volume size
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-modify-volume.html
@@ -172,29 +179,5 @@ Then you extend the file system (usually Ext4) with:
 `sudo resize2fs /dev/nvme0n1p1`
 
 Done!
+
 [Data Atsume website](http://www.data-atsu.me)
-
-
-
-[x] test `inline code` as well as ~~mistakes~~
-
-[ ] Add actual readme text based on project idea
-
-```
-multi-line
-blocks
-of
-code
-```
-
-> quotations
-
-- unordered
-- lists
-
-1. ordered
-   1. and nested
-      - within nested
-2. lists
-
-emoji's :+1:
