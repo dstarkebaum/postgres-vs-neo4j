@@ -98,16 +98,16 @@ def make_nodes(files):
 
 def make_relations(files):
 
-    cypher = make_cypher_queries(files)
+    cypher = make_cypher_queries(files, period=10000)
 
     graph = start_connection()
 
     if 'cites' in files:
-        verbose_query(graph,cypher['cites'])
+        verbose_query(graph,cypher['cites'], autocommit=True)
     if 'is_cited_by' in files:
-        verbose_query(graph,cypher['is_cited_by'])
+        verbose_query(graph,cypher['is_cited_by'], autocommit=True)
     if 'has_author' in files:
-        verbose_query(graph,cypher['has_author'])
+        verbose_query(graph,cypher['has_author'], autocommit=True)
 
 def cypher_import(files):
 
@@ -213,11 +213,11 @@ def make_cypher_queries(
 
 
 
-def return_query(graph, query):
+def return_query(graph, query, autocommit=False):
 
     start=time.perf_counter()
     logger.info(query)
-    transaction = graph.begin(autocommit=False)
+    transaction = graph.begin(autocommit=autocommit)
 
     try:
         cursor = transaction.run(query)
@@ -234,12 +234,12 @@ def return_query(graph, query):
             results = [record.values() for record in cursor]
             )
 
-def verbose_query(graph, query):
+def verbose_query(graph, query, autocommit=False):
 
     start=time.perf_counter()
 
     logger.info(query)
-    transaction = graph.begin(autocommit=False)
+    transaction = graph.begin(autocommit=autocommit)
     try:
         cursor = transaction.run(query)
     except Exception as e:
