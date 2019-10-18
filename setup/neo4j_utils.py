@@ -181,7 +181,8 @@ def make_cypher_queries(
             LOAD CSV WITH HEADERS FROM "{filename}" AS row
             FIELDTERMINATOR "|"
             {lim}
-            MATCH (p1:Paper {{id:row.id}}),(p2:Paper {{id:row.outcit_id}})
+            MATCH (p1:Paper {{id:row.id}})
+            MATCH (p2:Paper {{id:row.outcit_id}})
             MERGE (p1)-[:CITES]->(p2)
         '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['cites'])
 
@@ -191,7 +192,8 @@ def make_cypher_queries(
             LOAD CSV WITH HEADERS FROM "{filename}" AS row
             FIELDTERMINATOR "|"
             {lim}
-            MATCH (p1:Paper {{id:row.id}}),(p2:Paper {{id:row.incit_id}})
+            MATCH (p1:Paper {{id:row.id}})
+            MATCH (p2:Paper {{id:row.incit_id}})
             MERGE (p1)-[:IS_CITED_BY]->(p2)
         '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['is_cited_by'])
 
@@ -202,7 +204,8 @@ def make_cypher_queries(
             LOAD CSV WITH HEADERS FROM "{filename}" AS row
             FIELDTERMINATOR "|"
             {lim}
-            MATCH (p:Paper {{id:row.paper_id}}),(a:Author {{id:row.author_id}})
+            MATCH (p:Paper {{id:row.paper_id}})
+            MATCH (a:Author {{id:row.author_id}})
             MERGE (p)-[:HAS_AUTHOR]->(a)
         '''.format(per=periodic_commit,lim=row_limit,filename='file://'+files['has_author'])
 
