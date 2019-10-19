@@ -87,6 +87,16 @@ def main():
                 engine='neo4j',
                 testing=False,
                 cache=True)
+    elif args.easy == 'neo4j-admin':
+
+        pop.populate_database(
+                start=0,
+                end=10,
+                compress=False,
+                engine='neo4j-admin',
+                testing=False,
+                cache=True,
+                )
     elif args.easy == 'make-post':
 
         pop.populate_database(
@@ -114,7 +124,7 @@ def main():
             args.start,
             args.end,
             args.compress,
-            arg.engine
+            args.engine
     )
 
 
