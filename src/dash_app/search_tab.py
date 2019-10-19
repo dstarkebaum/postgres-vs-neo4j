@@ -1,21 +1,24 @@
-import dash
+
 import dash_core_components as dcc
 import dash_html_components as html
 import dash.dependencies as dep
+import dash_table
 
 import sqlalchemy
 import re
 import pandas as pd
-import dash_table
 import sqlalchemy.dialects
 import py2neo
 import psycopg2
 import plotly.graph_objs as obj
-from setup import neo4j_utils as n4u
-from setup import postgres_utils as pgu
-from setup import credentials
 
-pgu.set_database('david')
+from ..db_utils import neo4j_utils as n4u
+from ..db_utils import postgres_utils as pgu
+from ..db_utils import credentials
+from . import dash_app
+app = dash_app.app
+
+#pgu.set_database('david')
 
 
 def postgres_connect(database='medium'):
@@ -65,20 +68,20 @@ def dropdown_menu(id, placeholder, value=''):
         multi=False,
         value=value,
         style={'width': '99%'},
-        )
+    )
 
 
 # The dash app
-app = dash.Dash()
+#app = dash.Dash()
 # The flask server
-server = app.server
+#server = app.server
 
 # colors = {
 #     'background': '#333333',
 #     'text': '#00DD00'
 # }
 
-graph = n4u.start_connection('medium-remote')
+#graph = n4u.start_connection('medium-remote')
 #sqldb = postgres_connect()
 
 
@@ -87,287 +90,269 @@ graph = n4u.start_connection('medium-remote')
 
 #style={'backgroundColor': colors['background']},
 
-app.layout = html.Div(children=[
-    html.H1(
-        children='Postgres-vs-Neo4j',
-        style=dict(
-            textAlign = 'center'
-            #color = colors['text']
-            )
-    ),
-    html.Div(
-        children='Choose an author and start the queries!',
-        style= dict(
-            textAlign = 'center'
-            ),
-        #'color': colors['text']
-    ),
-
-#===============================Set Database====================================
-    html.Div([
-#                      ===========Postgres=============
-        html.Div([
-
-            dcc.Dropdown(
-                id='postgres_set_database',
-                #options=[{'label': '', 'value': ''}],
-                multi=False,
-                placeholder='Postgres Database...',
-                options=[{'label': key, 'value': key} for key in credentials.postgres],
-                style={'width': '99%'},
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
-            ),
-    #                      ===========Neo4j=============
-        html.Div([
-            dcc.Dropdown(
-                id='neo4j_set_database',
-                #options=[{'label': '', 'value': ''}],
-                multi=False,
-                placeholder='Neo4j Database...',
-                options=[{'label': key, 'value': key} for key in credentials.neo4j],
-                style={'width': '99%'},
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
-            ),
-
-        ], style = dict(
-            width = '100%',
-            display = 'table',
-            )
-    ),
-    html.Div([
-#===============================Count Database==================================
-#                      ===========Postgres=============
-        html.Div([
-            html.Div(
-                children='Postres Papers: ',
-                ),
-            html.Div(
-                id='postgres_papers_count',
-                children='',
-                ),
-            html.Div(
-                children='Authors: ',
-                ),
-            html.Div(
-                id='postgres_authors_count',
-                children='',
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
-            ),
-    #                      ===========Neo4j=============
-        html.Div([
-            html.Div(
-                children='Neo4j Papers: ',
-                ),
-            html.Div(
-                id='neo4j_papers_count',
-                children='',
-                ),
-            html.Div(
-                children='Authors: ',
-                ),
-            html.Div(
-                id='neo4j_authors_count',
-                children='',
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
-            ),
-
-        ], style = dict(
-            width = '100%',
-            display = 'table',
-            )
-    ),
-
-#=================================Search Bar====================================
-    html.Div([
-#                      ===========Postgres=============
-        html.Div([
-            html.Div(
-                children='Postgres:',
-                #style= dict(
-                #    textAlign = 'center'
-                #    ),
-                ),
-            # search bar for author. debaunce=True means they have to hit enter to start
-            dcc.Input(
-                id='postgres_search_bar',
-                placeholder='Author Name...',
-                type='search',
-                value='',
-                size = '40',
-                debounce=True,
-                ),
-            # Button for executing search (alternative to pressing enter)
-            html.Button(
-                children='Search',
-                id='postgres_execute_search',
-                type='submit',
-                n_clicks=0,
-                ),
-            html.Div(
-                id='postgres_author_search_time',
-                children='',
-                style = {'display':'inline-block','textAlign':'center'}
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
-        ),
-#                      ===========Neo4j=============
-        html.Div([
-            html.Div(
-                children='Neo4j:',
-                #style= dict(
-                #    textAlign = 'center'
-                #    ),
-                ),
-            # search bar for author. debaunce=True means they have to hit enter to start
-            dcc.Input(
-                id='neo4j_search_bar',
-                placeholder='Author Name...',
-                type='search',
-                value='',
-                size = '40',
-                debounce=True,
-                ),
-            # Button for executing search (alternative to pressing enter)
-            html.Button(
-                children='Search',
-                id='neo4j_execute_search',
-                type='submit',
-                n_clicks=0,
-                ),
-            html.Div(
-                id='neo4j_author_search_time',
-                children='',
-                style = {'display':'inline-block','textAlign':'center'}
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
+def make_layout():
+    return html.Div(children=[
+        html.Div(
+            children='Choose an author and start the queries!',
+            style= {'textAlign': 'center'},
+            #'color': colors['text']
         ),
 
-        ], style = {'width': '100%', 'display': 'table'}
-    ),
-
-#===============================Author Dropdown=================================
-    html.Div([
-#                      ===========Postgres=============
+    #===============================Set Database====================================
         html.Div([
-            query_box(
-                id='postgres_author_query',
-                placeholder='Postgres author query...',
-            ),
-
-            dropdown_menu(
-                id='postgres_author_list',
-                placeholder='Authors...',
+    #                      ===========Postgres=============
+            html.Div([
+                dcc.Dropdown(
+                    id='postgres_set_database',
+                    #options=[{'label': '', 'value': ''}],
+                    multi=False,
+                    placeholder='Postgres Database...',
+                    options=[{'label': key, 'value': key} for key in credentials.postgres],
+                    style={'width': '99%'},
                 ),
-            html.Div(
-                id='postgres_papers_search_time',
-                children='',
-                style = {'display':'inline-block','textAlign':'center'}
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
+        #                      ===========Neo4j=============
+            html.Div([
+                dcc.Dropdown(
+                    id='neo4j_set_database',
+                    #options=[{'label': '', 'value': ''}],
+                    multi=False,
+                    placeholder='Neo4j Database...',
+                    options=[{'label': key, 'value': key} for key in credentials.neo4j],
+                    style={'width': '99%'},
                 ),
             ], style = {'width': '49%', 'display': 'table-cell'}
             ),
 
+        ], style = {'width': '100%', 'display': 'table'},
+        ),
+        html.Div([
+    #===============================Count Database==================================
+    #                      ===========Postgres=============
+            html.Div([
+                html.Div(
+                    children='Postres Papers: ',
+                ),
+                html.Div(
+                    id='postgres_papers_count',
+                    children='',
+                ),
+                html.Div(
+                    children='Authors: ',
+                ),
+                html.Div(
+                    id='postgres_authors_count',
+                    children='',
+                ),
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
+        #                      ===========Neo4j=============
+            html.Div([
+                html.Div(
+                    children='Neo4j Papers: ',
+                ),
+                html.Div(
+                    id='neo4j_papers_count',
+                    children='',
+                ),
+                html.Div(
+                    children='Authors: ',
+                ),
+                html.Div(
+                    id='neo4j_authors_count',
+                    children='',
+                ),
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
+
+        ], style = {'width': '100%', 'display': 'table'},
+        ),
+
+    #=================================Search Bar====================================
+        html.Div([
+    #                      ===========Postgres=============
+            html.Div([
+                html.Div(
+                    children='Postgres:',
+                    #style= dict(
+                    #    textAlign = 'center'
+                    #    ),
+                ),
+                # search bar for author. debaunce=True means they have to hit enter to start
+                dcc.Input(
+                    id='postgres_search_bar',
+                    placeholder='Author Name...',
+                    type='search',
+                    value='',
+                    size = '40',
+                    debounce=True,
+                ),
+                # Button for executing search (alternative to pressing enter)
+                html.Button(
+                    children='Search',
+                    id='postgres_execute_search',
+                    type='submit',
+                    n_clicks=0,
+                ),
+                html.Div(
+                    id='postgres_author_search_time',
+                    children='',
+                    style = {'display':'inline-block','textAlign':'center'}
+                ),
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
     #                      ===========Neo4j=============
-        html.Div([
-            query_box(
-                id='neo4j_author_query',
-                placeholder='Neo4j author query...',
-            ),
-            dropdown_menu(
-                id='neo4j_author_list',
-                placeholder='Authors...',
+            html.Div([
+                html.Div(
+                    children='Neo4j:',
+                    #style= dict(
+                    #    textAlign = 'center'
+                    #    ),
                 ),
-            html.Div(
-                id='neo4j_papers_search_time',
-                children='',
-                style = {'display':'inline-block','textAlign':'center'}
+                # search bar for author. debaunce=True means they have to hit enter to start
+                dcc.Input(
+                    id='neo4j_search_bar',
+                    placeholder='Author Name...',
+                    type='search',
+                    value='',
+                    size = '40',
+                    debounce=True,
                 ),
-
-            ], style = {'width': '49%', 'display': 'table-cell'}
-            ),
-
-        ], style = dict(
-            width = '100%',
-            display = 'table',
-            )
-    ),
-
-
-#===============================Papers dropdown=================================
-    html.Div([
-#                      ===========Postgres=============
-        html.Div([
-            query_box(
-                id='postgres_papers_query',
-                placeholder='Postgres paper query...',
-            ),
-            dropdown_menu(
-                id='postgres_papers_list',
-                placeholder='Papers...',
+                # Button for executing search (alternative to pressing enter)
+                html.Button(
+                    children='Search',
+                    id='neo4j_execute_search',
+                    type='submit',
+                    n_clicks=0,
                 ),
-            html.Div(
-                id='postgres_cites_search_time',
-                children='',
-                style = {'display':'inline-block','textAlign':'center'}
-                ),
-            ], style = {'width': '49%', 'display': 'table-cell'}
-            ),
-    #                      ===========Neo4j=============
-        html.Div([
-            query_box(
-                id='neo4j_papers_query',
-                placeholder='Neo4j paper query...',
-            ),
-            dropdown_menu(
-                id='neo4j_papers_list',
-                placeholder='Papers...',
-                ),
-            html.Div(
-                id='neo4j_cites_search_time',
-                children='',
-                style = {'display':'inline-block','textAlign':'center'}
+                html.Div(
+                    id='neo4j_author_search_time',
+                    children='',
+                    style = {'display':'inline-block','textAlign':'center'}
                 ),
             ], style = {'width': '49%', 'display': 'table-cell'}
             ),
 
         ], style = {'width': '100%', 'display': 'table'}
-    ),
+        ),
 
-#===============================Cites dropdown=================================
-    html.Div([
-#                      ===========Postgres=============
+    #===============================Author Dropdown=================================
         html.Div([
-            query_box(
-                id='postgres_cites_query',
-                placeholder='Postgres cites query...',
+    #                      ===========Postgres=============
+            html.Div([
+                query_box(
+                    id='postgres_author_query',
+                    placeholder='Postgres author query...',
             ),
-            dropdown_menu(
-                id='postgres_cites_list',
-                placeholder='Cites...',
+
+                dropdown_menu(
+                    id='postgres_author_list',
+                    placeholder='Authors...',
+                ),
+                html.Div(
+                    id='postgres_papers_search_time',
+                    children='',
+                    style = {'display':'inline-block','textAlign':'center'}
+                ),
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
+
+        #                      ===========Neo4j=============
+            html.Div([
+                query_box(
+                    id='neo4j_author_query',
+                    placeholder='Neo4j author query...',
+                ),
+                dropdown_menu(
+                    id='neo4j_author_list',
+                    placeholder='Authors...',
+                ),
+                html.Div(
+                    id='neo4j_papers_search_time',
+                    children='',
+                    style = {'display':'inline-block','textAlign':'center'}
                 ),
 
             ], style = {'width': '49%', 'display': 'table-cell'}
             ),
-    #                      ===========Neo4j=============
+
+        ], style = {'width': '100%', 'display': 'table'}
+        ),
+
+
+    #===============================Papers dropdown=================================
         html.Div([
-            query_box(
-                id='neo4j_cites_query',
-                placeholder='Neo4j cites query...',
+    #                      ===========Postgres=============
+            html.Div([
+                query_box(
+                    id='postgres_papers_query',
+                    placeholder='Postgres paper query...',
+                ),
+                dropdown_menu(
+                    id='postgres_papers_list',
+                    placeholder='Papers...',
+                ),
+                html.Div(
+                    id='postgres_cites_search_time',
+                    children='',
+                    style = {'display':'inline-block','textAlign':'center'}
+                ),
+            ], style = {'width': '49%', 'display': 'table-cell'}
             ),
-            dropdown_menu(
-                id='neo4j_cites_list',
-                placeholder='Cites...',
+        #                      ===========Neo4j=============
+            html.Div([
+                query_box(
+                    id='neo4j_papers_query',
+                    placeholder='Neo4j paper query...',
+                ),
+                dropdown_menu(
+                    id='neo4j_papers_list',
+                    placeholder='Papers...',
+                ),
+                html.Div(
+                    id='neo4j_cites_search_time',
+                    children='',
+                    style = {'display':'inline-block','textAlign':'center'}
                 ),
             ], style = {'width': '49%', 'display': 'table-cell'}
             ),
 
         ], style = {'width': '100%', 'display': 'table'}
-    ),
+        ),
 
-]) # end app layout
+    #===============================Cites dropdown=================================
+        html.Div([
+    #                      ===========Postgres=============
+            html.Div([
+                query_box(
+                    id='postgres_cites_query',
+                    placeholder='Postgres cites query...',
+                ),
+                dropdown_menu(
+                    id='postgres_cites_list',
+                    placeholder='Cites...',
+                ),
+
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
+    #                      ===========Neo4j=============
+            html.Div([
+                query_box(
+                    id='neo4j_cites_query',
+                    placeholder='Neo4j cites query...',
+                ),
+                dropdown_menu(
+                    id='neo4j_cites_list',
+                    placeholder='Cites...',
+                ),
+            ], style = {'width': '49%', 'display': 'table-cell'}
+            ),
+
+        ], style = {'width': '100%', 'display': 'table'}
+        ),
+
+    ]) # end layout
 
 
 #===============================Callbacks=======================================
@@ -394,10 +379,12 @@ def set_postgres_database(database):
 
 #                      ===========Neo4j=============
 @app.callback([
-    dep.Output('neo4j_papers_count','children'),
-    dep.Output('neo4j_authors_count','children'),
+        dep.Output('neo4j_papers_count','children'),
+        dep.Output('neo4j_authors_count','children'),
+    ],[
+        dep.Input('neo4j_set_database', 'value')
     ],
-[dep.Input('neo4j_set_database', 'value')],)
+)
 def set_neo4j_database(database):
 
     # only allow alphanumeric inputs
@@ -416,11 +403,12 @@ def set_neo4j_database(database):
 #===============================Author search===================================
 #                      ===========Postgres=============
 @app.callback([
-    dep.Output('postgres_author_query', 'value'),
-    dep.Output('postgres_author_list', 'options'),
-    dep.Output('postgres_author_search_time', 'children'),
+        dep.Output('postgres_author_query', 'value'),
+        dep.Output('postgres_author_list', 'options'),
+        dep.Output('postgres_author_search_time', 'children'),
+    ],[
+        dep.Input('postgres_search_bar', 'value')
     ],
-    [dep.Input('postgres_search_bar', 'value')],
 )
 def update_postgres_author_list(search_string):
     # only allow alphanumeric inputs
@@ -435,7 +423,7 @@ def update_postgres_author_list(search_string):
             query.strip(),
             [{'label':name,'value':str(id)} for (name,id) in r['results']],
             readable_time(r['time']),
-            ]
+        ]
     else:
         # if not found match
         #print("No match")
@@ -443,15 +431,16 @@ def update_postgres_author_list(search_string):
             'Use only A-Z,a-z,0-9 for author names',
             [{'label':'','value':''}],
             "0.0 ms",
-            ]
+        ]
 
 #                      ===========Neo4j=============
 @app.callback([
-    dep.Output('neo4j_author_query', 'value'),
-    dep.Output('neo4j_author_list', 'options'),
-    dep.Output('neo4j_author_search_time', 'children'),
+        dep.Output('neo4j_author_query', 'value'),
+        dep.Output('neo4j_author_list', 'options'),
+        dep.Output('neo4j_author_search_time', 'children'),
+    ],[
+        dep.Input('neo4j_search_bar', 'value')
     ],
-    [dep.Input('neo4j_search_bar', 'value')],
 )
 def update_neo4j_author_list(search_string):
     # only allow alphanumeric inputs
@@ -466,7 +455,7 @@ def update_neo4j_author_list(search_string):
             query.strip(),
             [{'label':name,'value':str(id)} for (name,id) in r['results']],
             readable_time(r['time']),
-            ]
+        ]
     else:
         # if not found match
         #print("No match")
@@ -474,17 +463,18 @@ def update_neo4j_author_list(search_string):
             'Use only A-Z,a-z,0-9 for author names',
             [{'label':'','value':''}],
             "0.0 ms",
-            ]
+        ]
 
 
 #===============================Paper search====================================
 #                      ===========Postgres=============
 @app.callback([
-    dep.Output('postgres_papers_query', 'value'),
-    dep.Output('postgres_papers_list', 'options'),
-    dep.Output('postgres_papers_search_time', 'children'),
+        dep.Output('postgres_papers_query', 'value'),
+        dep.Output('postgres_papers_list', 'options'),
+        dep.Output('postgres_papers_search_time', 'children'),
+    ],[
+        dep.Input('postgres_author_list', 'value')
     ],
-    [dep.Input('postgres_author_list', 'value')],
 )
 def update_postgres_papers_list(author_id):
 
@@ -497,15 +487,14 @@ def update_postgres_papers_list(author_id):
                 where has_author.author_id = {author_id}
             ) as by_author
             where papers.id = by_author.paper_id;
-            '''.format(
-                author_id=author_id
-                )
+            '''.format(author_id=author_id)
+
         r = pgu.return_query(query)
         return [
             query.strip(),
             [{'label':title,'value':str(id)} for (title,id) in r['results']],
             readable_time(r['time']),
-            ]
+        ]
     else:
         # if not found match
         #print("No match")
@@ -513,15 +502,16 @@ def update_postgres_papers_list(author_id):
             '',
             [{'label':'Select an author to search Postgres','value':''}],
             "0.0 ms",
-            ]
+        ]
 
 #                      ===========Neo4j=============
 @app.callback([
-    dep.Output('neo4j_papers_query', 'value'),
-    dep.Output('neo4j_papers_list', 'options'),
-    dep.Output('neo4j_papers_search_time', 'children'),
+        dep.Output('neo4j_papers_query', 'value'),
+        dep.Output('neo4j_papers_list', 'options'),
+        dep.Output('neo4j_papers_search_time', 'children'),
+    ],[
+        dep.Input('neo4j_author_list', 'value')
     ],
-    [dep.Input('neo4j_author_list', 'value')],
 )
 def update_neo4j_papers_list(author_id):
 
@@ -552,11 +542,12 @@ def update_neo4j_papers_list(author_id):
 #===============================Cites search====================================
 #                      ===========Postgres=============
 @app.callback([
-    dep.Output('postgres_cites_query', 'value'),
-    dep.Output('postgres_cites_list', 'options'),
-    dep.Output('postgres_cites_search_time', 'children'),
+        dep.Output('postgres_cites_query', 'value'),
+        dep.Output('postgres_cites_list', 'options'),
+        dep.Output('postgres_cites_search_time', 'children'),
+    ],[
+        dep.Input('postgres_papers_list', 'value')
     ],
-    [dep.Input('postgres_papers_list', 'value')],
 )
 def update_postgres_cites_list(paper_id):
 
@@ -575,7 +566,7 @@ def update_postgres_cites_list(paper_id):
             query.strip(),
             [{'label':title,'value':str(id)} for (title,id) in r['results']],
             readable_time(r['time']),
-            ]
+        ]
     else:
         # if not found match
         #print("No match")
@@ -583,15 +574,16 @@ def update_postgres_cites_list(paper_id):
             '',
             [{'label':'Select a paper to search Postgres','value':''}],
             "0.0 ms",
-            ]
+        ]
 
 #                      ===========Neo4j=============
 @app.callback([
-    dep.Output('neo4j_cites_query', 'value'),
-    dep.Output('neo4j_cites_list', 'options'),
-    dep.Output('neo4j_cites_search_time', 'children'),
+        dep.Output('neo4j_cites_query', 'value'),
+        dep.Output('neo4j_cites_list', 'options'),
+        dep.Output('neo4j_cites_search_time', 'children'),
+    ],[
+        dep.Input('neo4j_papers_list', 'value')
     ],
-    [dep.Input('neo4j_papers_list', 'value')],
 )
 def update_neo4j_cites_list(paper_id):
 
@@ -608,7 +600,7 @@ def update_neo4j_cites_list(paper_id):
             query.strip(),
             [{'label':title,'value':str(id)} for (title,id) in r['results']],
             readable_time(r['time']),
-            ]
+        ]
     else:
         # if not found match
         #print("No match")
@@ -616,7 +608,7 @@ def update_neo4j_cites_list(paper_id):
             '',
             [{'label':'Select a paper to search Neo4j','value':''}],
             "0.0 ms",
-            ]
+        ]
 
 
 

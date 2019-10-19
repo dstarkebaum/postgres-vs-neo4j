@@ -5,7 +5,7 @@ import os
 import time
 import subprocess
 import logging
-from setup import credentials
+from . import credentials
 logger = logging.getLogger(__name__)
 
 

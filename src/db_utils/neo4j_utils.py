@@ -2,12 +2,14 @@ import subprocess
 import argparse
 import pathlib
 import os
+import pwd
+import textwrap
 from contextlib import ExitStack
 import time
 from datetime import datetime
 import py2neo
 import logging
-from setup import credentials
+from . import credentials
 # setup logging
 
 logger = logging.getLogger(__name__)
@@ -243,11 +245,13 @@ def verbose_query(graph, query, autocommit=False):
     try:
         cursor = transaction.run(query)
     except Exception as e:
-        transaction.rollback()
+        if not autocommit:
+            transaction.rollback()
         logger.info(e)
         return None
     finally:
-        transaction.commit() # or maybe not
+        if not autocommit:
+            transaction.commit()
         stats = cursor.stats()
         for key in stats:
             logger.info(key + ": "+ str(stats[key]))
@@ -296,61 +300,100 @@ def delete_duplicate_relationships():
             '''
     verbose_query(graph,query)
 
+
+
 def log_subprocess_output(pipe):
     for line in iter(pipe.readline, b''): # b'\n'-separated lines
         logger.info('subprocess: %r', line)
 
+def emulate_neo4j():
+    def result():
+        rec = pwd.getpwnam('neo4j')
+        print(rec.pw_gid)
+        print(rec.pw_uid)
+        os.setgid(rec.pw_gid)
+        os.setuid(rec.pw_uid)
+    return result
 # This import requires a complete dictionary of files all at once
 # stored locally on disk, and is likely to run out of RAM for large imports
-def admin_import(dict_of_csv_files):
+def admin_import(collection_of_files, headers):
     start_time = time.perf_counter()
 
-    with ExitStack() as stack:
-        stdout_log = stack.enter_context(open('logs/import_csv.stdout','w'))
-        stderr_log = stack.enter_context(open('logs/import_csv.stderr','w'))
-        timer = stack.enter_context(open('logs/import_csv.timer','a+'))
-        logger.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
-                ' Starting neo4j-admin import\n')
-        logger.info('Papers: '+ ','.join(dict_of_csv_files['papers'])+'\n')
-        logger.info('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
-        logger.info('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
-        logger.info('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
-        logger.info('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
-        #stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
+    #with ExitStack() as stack:
+        #stdout_log = stack.enter_context(open('logs/import_csv.stdout','w'))
+        #stderr_log = stack.enter_context(open('logs/import_csv.stderr','w'))
+        #timer = stack.enter_context(open('logs/import_csv.timer','a+'))
+    logger.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+            ' Starting neo4j-admin import\n')
 
-        logger.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
-                ' Starting neo4j-admin import')
 
-        bash_commands= [
-                    'neo4j-admin',
-                    'import',
-                    '--ignore-duplicate-nodes',
-                    '--ignore-missing-nodes',
-                    '--delimiter', '|',
-                    '--report-file=logs/neo4j.report',
-                    '--nodes:Paper', ','.join(dict_of_csv_files['papers']),
-                    '--nodes:Author', ','.join(dict_of_csv_files['authors']),
-                    '--relationships:CITES', ','.join(dict_of_csv_files['cites']),
-                    '--relationships:IS_CITED_BY', ','.join(dict_of_csv_files['is_cited_by']),
-                    '--relationships:HAS_AUTHOR', ','.join(dict_of_csv_files['has_author'])
-                    #'--relationships:IS_AUTHOR_OF',
-                    #','.join(files['is_author_of'])
-                    ]
+    for table in collection_of_files[0]:
+        logger.info(table + ': '+ ','.join([
+            collection_of_files[i][table]+'\n'
+            for i in collection_of_files
+        ]))
+        #logger.info('Authors: '+ ','.join(dict_of_csv_files['authors'])+'\n')
+        #logger.info('CITES: '+ ','.join(dict_of_csv_files['cites'])+'\n')
+        #logger.info('IS_CITED_BY: '+ ','.join(dict_of_csv_files['is_cited_by'])+'\n')
+        #logger.info('HAS_AUTHOR: '+ ','.join(dict_of_csv_files['has_author'])+'\n')
+    #stdout_log.write('IS_AUTHOR_OF: '+ ','.join(files['is_author_of'])+'\n')
 
-        logger.info(' '.join(bash_commands))
+    logger.info(datetime.now().strftime("%m/%d/%Y,%H:%M:%S")+
+            ' Starting neo4j-admin import')
 
-        pipe = subprocess.call(
-                bash_commands,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                )
+    bash_commands= [
+                'neo4j-admin',
+                'import',
+                '--ignore-duplicate-nodes',
+                '--ignore-missing-nodes',
+                '--delimiter', '|',
+                '--report-file=logs/neo4j.report',
+                '--nodes', headers['papers']+','+','.join([
+                    collection_of_files[i]['papers']
+                    for i in collection_of_files
+                    ]),
+                '--nodes', headers['authors']+','+','.join([
+                    collection_of_files[i]['authors']
+                    for i in collection_of_files
+                    ]),
+                '--relationships', headers['cites']+','+','.join([
+                    collection_of_files[i]['cites']
+                    for i in collection_of_files
+                    ]),
+                '--relationships', headers['is_cited_by']+','+','.join([
+                    collection_of_files[i]['is_cited_by']
+                    for i in collection_of_files
+                    ]),
+                '--relationships', headers['has_author']+','+','.join([
+                    collection_of_files[i]['has_author']
+                    for i in collection_of_files
+                    ]),
+                #'--relationships:IS_AUTHOR_OF',
+                #','.join(files['is_author_of'])
+                ]
 
-        log_subprocess_output(pipe)
+    logger.info(' '.join(bash_commands))
 
-        logger.info(
-                "Number of files: "+str(len(dict_of_csv_files['papers']))+\
-                ", processing time: "+str(time.perf_counter()-start_time)
-                )
+    with subprocess.Popen(
+            bash_commands,
+            preexec_fn=emulate_neo4j,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            ) as proc:
+
+            for line in proc.stdout:
+                logger.info(
+                    'subprocess: %r',
+                    textwrap.dedent(line.strip())#.decode('utf-8'))
+                    )
+
+            #log_subprocess_output(proc.stdout)
+
+    logger.info(
+            #"Number of files: "+str(len(collection_of_files['papers']))+\
+            "Processing time: "+str(time.perf_counter()-start_time)
+            )
 
 # def find_largest_groups():
 #     q1='''

@@ -1,13 +1,12 @@
 import subprocess
-import argparse
 import pathlib
 import os
 from contextlib import ExitStack
 import time
 from datetime import datetime
-from setup import json_to_csv
-from setup import postgres_utils
-from setup import neo4j_utils
+from . import json_to_csv
+from . import postgres_utils
+from . import neo4j_utils
 #from setup import logger_config as log
 import boto3
 
@@ -54,42 +53,6 @@ neo4j_utils.logger.addHandler(handler)
 
 tables = ['papers', 'is_cited_by', 'cites', 'authors', 'has_author']#, 'is_author_of']
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('corpus_path',type=str,default='data/s2-corpus',
-            help='Directory to store the json corpus')
-    parser.add_argument('csv_path',type=str,default='data/csv',
-            help='Directory to store the parsed csv files')
-    parser.add_argument('--prefix',type=str,default='s2-corpus',
-            help='filename prefix for csv files')
-    parser.add_argument('--suffix',type=str,default='.csv',
-            help='filename suffix for csv files')
-    parser.add_argument('--start',type=int,default=0,
-            help='file number to start with')
-    parser.add_argument('--end',type=int,default=0,
-            help='file number to end with (max=176)')
-    parser.add_argument('--compress', action='store_true',
-            help='choose if the source file is compressed (gz)')
-    parser.add_argument('--engine',type=str,default='neo4j',
-            help='choose database: postgres, psql, neo4j, or neo4j-admin')
-
-
-    return parser.parse_args()
-
-def main():
-    args = parse_args()
-    populate_database(
-        args.corpus_path,
-        args.csv_path,
-        args.prefix,
-        args.suffix,
-        args.start,
-        args.end,
-        args.compress,
-        arg.engine
-    )
-
 
 # DEPRACATED: redundant with json_to_csv.absolute_path
 def csv_filename(table,directory,prefix,suffix,number,compress):
@@ -121,13 +84,6 @@ def populate_database(
 
     logger.info(os.getcwd())
 
-    # create a dictionary of path names
-    #        {t : path_list(
-    #            t, csv_path, prefix, suffix, start, end, compress
-    #        ) for t in tables }
-
-    #missing_file = False
-
     # loop through the list of normalized tables in our database
     collection_of_files = {}
     for i in range(start, end+1):
@@ -139,13 +95,12 @@ def populate_database(
                     path=corpus_path,
                     prefix=prefix,
                     num=str(i).zfill(3)
-                    )
+            )
 
             files = {t : json_to_csv.absolute_path(
                     t, csv_path, json_local, unique=True, compress=compress
                     ) for t in tables}
         else:
-
             files = download_and_extract_json(
                 corpus_path=corpus_path,
                 prefix=prefix,
@@ -154,7 +109,9 @@ def populate_database(
                 compress=compress,
                 make_int=make_int,
                 testing=testing,
-                cache=cache)
+                cache=cache,
+                engine=engine,
+            )
 
         if not cache and 'neo4j' == engine:
             logger.warning('Neo4j with no cache: Processing files one at a time')
@@ -164,7 +121,7 @@ def populate_database(
 
         elif 'psql' == engine:
             postgres_utils.psql_import(files, database)
-        
+
         if cache:
             collection_of_files[i]=files
         else:
@@ -182,12 +139,16 @@ def populate_database(
 
         neo4j_utils.delete_duplicate_relationships()
 
+    if cache and 'neo4j-admin' == engine:
+        headers = json_to_csv.make_neo4j_headers(corpus_path, csv_path)
+        for i in range(start, end+1):
+            print(collection_of_files[i])
+        neo4j_utils.admin_import(collection_of_files, headers)
+
     #     else:
     #         for table in files:
     #             dict_of_csv_files[table]
     #
-    # if 'neo4j-admin' == engine:
-    #     neo4j_utils.admin_import(dict_of_csv_files)
 
 
             #file = csv_filename(t, csv_path, prefix, suffix, i, compress)
@@ -275,6 +236,3 @@ def delete_file(filename):
     subprocess.call([ 'rm', '-r', filename ])
 
 #def parse_json(corpus_path, output_dir, make_int=False,unique=False,neo4j=False,compress=False):
-
-if __name__ == "__main__":
-    main()

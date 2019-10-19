@@ -1,3 +1,9 @@
-from setup import dash_app
 
-dash_app.app.run_server(debug=True)
+from src.dash_app import index
+
+def main():
+    index.app.run_server(debug=True)
+
+
+if __name__ == "__main__":
+    main()

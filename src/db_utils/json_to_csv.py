@@ -97,21 +97,31 @@ def absolute_path(table_name, output_dir, corpus_path, unique=False,compress=Fal
 # load_csv "authors" "id, name"
 # load_csv "paper_authors" "paper_id, author_id"
 
-def write_headers(files,neo4j=True):
-    if neo4j:
+
+
+def write_headers(files):
+    files['papers'].write(format(['id','title','year','doi']))
+    files['is_cited_by'].write(format(['id','incit_id']))
+    files['cites'].write(format(['id','outcit_id']))
+    files['authors'].write(format(['id','name']))
+    files['has_author'].write(format(['paper_id','author_id']))
+    #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
+
+def make_neo4j_headers(
+        corpus_path,
+        output_dir,
+        ):
+    header_filenames = {t:absolute_path(t,output_dir,corpus_path,unique=False,compress=False) for t in tables}
+    with ExitStack() as stack:
+        files = {t : stack.enter_context(open(header_filenames[t],'w')) for t in tables}
+
         files['papers'].write(format(['id:ID(Paper)','title','year:INT','doi',':LABEL']))
         files['is_cited_by'].write(format(['id:START_ID(Paper)','is_cited_by_id:END_ID(Paper)',':TYPE']))
         files['cites'].write(format(['id:START_ID(Paper)','cites_id:END_ID(Paper)',':TYPE']))
         files['authors'].write(format(['id:ID(Author)','name',':LABEL']))
         files['has_author'].write(format(['paper_id:START_ID(Paper)','author_id:END_ID(Author)',':TYPE']))
         #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
-    else:
-        files['papers'].write(format(['id','title','year','doi']))
-        files['is_cited_by'].write(format(['id','incit_id']))
-        files['cites'].write(format(['id','outcit_id']))
-        files['authors'].write(format(['id','name']))
-        files['has_author'].write(format(['paper_id','author_id']))
-        #files['is_author_of'].write(format(['author_id:START_ID(Author)','paper_id:END_ID(Paper)',':TYPE']))
+    return header_filenames
 
 def parse_json(
         corpus_path,
@@ -147,6 +157,8 @@ def parse_json(
     # check whether the input json file is compressed
     compressed_input = (corpus_path.split('.')[-1] == 'gz')
 
+
+
     # keep a count of the number of records parsed
     count = 0
 
@@ -164,7 +176,8 @@ def parse_json(
         else:
             files = {t : stack.enter_context(open(output_files[t],'w')) for t in tables}
 
-        write_headers(files,neo4j)
+        if not neo4j:
+            write_headers(files)
         # Parse each line of JSON, and write the appropriate fields
         # to each csv table
         for line in json_in:
@@ -238,7 +251,7 @@ def parse_json(
                 if neo4j:
                     row = [id,cit,':CITES']
 
-                files['cites'].write(format([id,cit]))
+                files['cites'].write(format(row))
 
             # many duplicates are likely in the author list
             # because we are looking for authors in each paper record
