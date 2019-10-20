@@ -119,7 +119,7 @@ def populate_database(
             logger.warning('they will not be created if one of the nodes is missing')
             neo4j_utils.cypher_import(files)
 
-        elif 'psql' == engine:
+        if not cache and 'psql' == engine:
             postgres_utils.psql_import(files, database)
 
         if cache:
@@ -127,17 +127,19 @@ def populate_database(
         else:
             for f in files:
                 delete_file(files[f])
+
     if cache and 'neo4j' == engine:
 
         neo4j_utils.make_all_indexes()
-
         for i in range(start, end+1):
             neo4j_utils.make_nodes(collection_of_files[i])
-
         for i in range(start, end+1):
             neo4j_utils.make_relations(collection_of_files[i])
-
         neo4j_utils.delete_duplicate_relationships()
+
+    if cache and 'psql' == engine:
+        for i in range(start, end+1):
+            postgres_utils.psql_import(collection_of_files[i], database)
 
     if cache and 'neo4j-admin' == engine:
         headers = json_to_csv.make_neo4j_headers(corpus_path, csv_path)
