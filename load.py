@@ -75,8 +75,8 @@ def main():
                 cache=True,
                 database='local',
                 )
-        pgu.create_all_indexes(database='david')
-        pgu.cleanup_database(database='david')
+        pgu.create_all_indexes(database='local')
+        pgu.cleanup_database(database='local')
 
     elif args.easy == 'make-neo4j':
 
@@ -91,7 +91,7 @@ def main():
 
         pop.populate_database(
                 start=0,
-                end=10,
+                end=176,
                 compress=False,
                 engine='neo4j-admin',
                 testing=False,

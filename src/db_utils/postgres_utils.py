@@ -5,6 +5,7 @@ import os
 import time
 import subprocess
 import logging
+import textwrap
 from . import credentials
 logger = logging.getLogger(__name__)
 
@@ -326,7 +327,7 @@ def create_all_indexes(database='local'):
 def psql_import(csv_files, database='local'):
     for table in csv_files:
         #query = '''"\copy {table}({headers}) FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER '|')"'''.format(
-        query = '''"\\copy {table} FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER '|')"'''.format(
+        query = '\\copy {table} FROM {file} WITH (FORMAT CSV, HEADER, DELIMITER "|")'.format(
             table=table,
             file=csv_files[table],
             headers=", ".join(headers[table])
@@ -342,9 +343,23 @@ def psql_import(csv_files, database='local'):
                 '-c',query,
                 ]
         logger.info("psql import: \n"+query)
-        #logger.info("subprocess call: \n"+commands)
+        logger.info("subprocess call: \n"+" ".join(commands))
+        with subprocess.Popen(
+                commands,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True,
+                #shell=True,
+                ) as proc:
 
-        subprocess.Popen(commands)#[proc.encode('unicode_escape')])
+                for line in proc.stdout:
+                    logger.info(
+                        'subprocess: %r',
+                        textwrap.dedent(line.strip())#.decode('utf-8'))
+                        )
+
+
+
         # subprocess.call('psql' + \
         #         ' -h ' + credentials.postgres[database]['host'] + \
         #         ' -d ' + credentials.postgres[database]['database'] + \
