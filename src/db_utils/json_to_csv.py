@@ -213,7 +213,7 @@ def parse_json(
             paper_record = [id,title,year,doi]#, abstract]
             # for neo4j admin import, add an extra column for labels
             if neo4j:
-                paper_record.append(':Paper')
+                paper_record.append('Paper')
 
             files['papers'].write(format(paper_record))
 
@@ -234,7 +234,7 @@ def parse_json(
                 # for neo4j admin import add an extra column for labels
                 row = [id,cit]
                 if neo4j:
-                    row = [id,cit,':IS_CITED_BY']
+                    row = [id,cit,'IS_CITED_BY']
 
                 files['is_cited_by'].write(format(row))
 
@@ -249,7 +249,7 @@ def parse_json(
                 row = [id,cit]
 
                 if neo4j:
-                    row = [id,cit,':CITES']
+                    row = [id,cit,'CITES']
 
                 files['cites'].write(format(row))
 
@@ -283,7 +283,7 @@ def parse_json(
                     #is_author_of_row = [author_id,id]
 
                     if neo4j:
-                        author_row = [author_id,author_name,':Author']
+                        author_row = [author_id,author_name,'Author']
                         has_author_row = [id,author_id,'HAS_AUTHOR']
                     #    is_author_of_row = [author_id,id,'IS_AUTHOR_OF']
 
