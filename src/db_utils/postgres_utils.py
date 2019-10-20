@@ -344,19 +344,19 @@ def psql_import(csv_files, database='local'):
                 ]
         logger.info("psql import: \n"+query)
         logger.info("subprocess call: \n"+" ".join(commands))
-        with subprocess.Popen(
+        results = subprocess.check_output(
                 commands,
-                stdout=subprocess.PIPE,
+                #stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True,
                 #shell=True,
-                ) as proc:
+                )
 
-                for line in proc.stdout:
-                    logger.info(
-                        'subprocess: %r',
-                        textwrap.dedent(line.strip())#.decode('utf-8'))
-                        )
+        #for line in results:
+        logger.info(
+                'psql: %r',
+                textwrap.dedent(results.strip())#.decode('utf-8'))
+                )
 
 
 
