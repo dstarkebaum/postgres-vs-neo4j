@@ -121,19 +121,27 @@ https://www.postgresql.org/docs/10/backup-file.html
 "tar -c" = create archive
 "tar -f" = choose filename for the archive (next argument)
 
+
+
+
+
+## For postgres import
+- More to come soon
+
+PGTune - a convenient tool to estimate memory settings for Postgres:
+https://pgtune.leopard.in.ua/
+
+Settings files:
+`sudo nano /etc/postgresql/10/main/postgresql.conf`
+`sudo nano /etc/postgresql/10/main/pg_hba.conf`
+
+
 psql:
 create extension btree_gin;
 create extension pg_stat_statements;
 create extension pg_trgm;
 \dx
 
-
-## For postgres import
-- More to come soon
-
-Settings files:
-`sudo nano /etc/postgresql/10/main/postgresql.conf`
-`sudo nano /etc/postgresql/10/main/pg_hba.conf`
 
 
 `sudo service postgresql restart`

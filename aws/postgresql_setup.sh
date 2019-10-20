@@ -36,8 +36,8 @@ sudo apt-get --yes install \
 
 # install python packages
 #pip3 install nose seaborn boto scikit-learn psycopg2 apache-airflow
-sudo -u ubuntu sh -c 'yes | pip3 install wheel'
-sudo -u ubuntu sh -c 'yes | pip3 install boto3 py2neo psycopg2'
+sudo -u ubuntu sh -c 'pip3 install wheel'
+sudo -u ubuntu sh -c 'pip3 install boto3 py2neo psycopg2'
 #yes | pip3 install wheel psycopg2 boto3
 
 # create a PostgreSQL history file to record queries to the database
