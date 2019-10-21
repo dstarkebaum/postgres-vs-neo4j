@@ -83,6 +83,9 @@ You may also need to modify the neo4j configuration file:
 You can find (somewhat) detailed information about each parameter here:
 https://neo4j.com/docs/operations-manual/current/reference/configuration-settings/
 
+Use this to estimate appropriate settings:
+`neo4j-admin memrec`
+
 Paramaters to look for:
 `dbms.security.auth_enabled=false`
 - Disables authentication for user access...
@@ -112,6 +115,10 @@ according to your system clock instead of UTC
 Check the results with `cypher-shell`:
 `CALL db.indexes();`
 
+Make indexes if needed:
+`CREATE INDEX ON :Paper(id);`
+`CREATE INDEX ON :Author(id);`
+
 Backup neo4j (community edition):
 https://www.postgresql.org/docs/10/backup-file.html
 `tar -cf backup.tar /var/lib/neo4j/data/databases/graph.db`
@@ -134,6 +141,7 @@ Settings files:
 
 
 psql:
+SELECT * FROM pg_available_extensions;
 create extension btree_gin;
 create extension pg_stat_statements;
 create extension pg_trgm;
