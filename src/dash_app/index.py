@@ -11,6 +11,7 @@ import dash.dependencies as dep
 #from tabs import tab_2
 
 app = dash_app.app
+server = app.server
 
 app.layout = html.Div([
     html.H1(
