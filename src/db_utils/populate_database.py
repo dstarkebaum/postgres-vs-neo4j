@@ -3,7 +3,6 @@ import pathlib
 import os
 from contextlib import ExitStack
 import time
-from datetime import datetime
 from . import json_to_csv
 from . import postgres_utils
 from . import neo4j_utils
@@ -12,7 +11,7 @@ import boto3
 
 import logging
 import sys
-from datetime import datetime, timedelta
+#from datetime import datetime, timedelta
 
 # setup logging
 logging.basicConfig(level=logging.INFO)

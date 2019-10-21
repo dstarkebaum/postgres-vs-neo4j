@@ -101,10 +101,11 @@ def main():
 
         pop.populate_database(
                 start=0,
-                end=176,
+                end=2,
                 compress=False,
                 engine='psql',
                 make_int=True,
+                cache=True,
                 #use_previous=True,
                 testing=False,
                 database='local'

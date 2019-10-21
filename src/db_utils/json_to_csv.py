@@ -187,7 +187,7 @@ def parse_json(
             # test with 100 lines to start
             if count in [100, 1000, 10000, 100000, 500000]:
                 logger.info(str(count)+" records parsed after "+to_secs(time.perf_counter() - start_time)+" seconds")
-            if 100 == count and testing:
+            if 10000 == count and testing:
                 break
             count = count + 1
 

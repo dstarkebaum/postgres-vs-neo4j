@@ -108,9 +108,6 @@ But you will need to put something here to enable any access over a network
 But it is very helpful to get useful logs that actually record the local time
 according to your system clock instead of UTC
 
-Ex: import just one set of compressed csv files in data/csv/s2-corpus-000-[table].csv.gz:
-`sudo python3 setup/populated_database.py --compress --start 0 --end 0`
-
 
 Check the results with `cypher-shell`:
 `CALL db.indexes();`
@@ -151,11 +148,25 @@ logfile on Ubuntu
 
 Making a database backup:
 https://www.postgresql.org/docs/10/backup-file.html
-`tar -cf backup.tar /usr/local/pgsql/data`
 
+First *stop the database*
+`sudo service postgresql stop`
+Navigate to the directory containing your database:
+`cd /var/lib/postgresql/10`
+Put the whole database into a tar file:
+`sudo tar -cf main_backup.tar main`
+
+Restoring a backup:
+Navigate to the directory containing your database:
+`cd /var/lib/postgresql/10`
+For safety sake you can first just rename your current database:
+`sudo mv main main_original`
+Then extract your tar file (it should automatically be named "main", and have the correct permissions as before):
+`sudo tar -xvf main_backup.tar`
+Finally, restart the database
+`sudo service postgresql start`
 
 ## Clearing cache for benchmarking
-
 
 `sudo service postgresql stop` / `sudo neo4j stop`
 `sync && echo 3 | sudo tee /proc/sys/vm/drop_caches`
