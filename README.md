@@ -116,8 +116,13 @@ Check the results with `cypher-shell`:
 `CALL db.indexes();`
 
 Make indexes if needed:
-`CREATE INDEX ON :Paper(id);`
-`CREATE INDEX ON :Author(id);`
+`CREATE CONSTRAINT ON (p:Paper) ASSERT p.id IS UNIQUE;`
+`CREATE CONSTRAINT ON (a:Author) ASSERT a.id IS UNIQUE;`
+
+You can also execute commands directly from bash (useful for long-running tasks):
+`cypher-shell --non-interactive 'CREATE CONSTRAINT ON (a:Author) ASSERT a.id IS UNIQUE;'`
+then press ctrl+z to pause, type `bg` to move to background, then `disown` to release it from your terminal
+This can allow you to logout and let the process continue until it is finished
 
 Backup neo4j (community edition):
 https://www.postgresql.org/docs/10/backup-file.html
@@ -173,6 +178,14 @@ Then extract your tar file (it should automatically be named "main", and have th
 `sudo tar -xvf main_backup.tar`
 Finally, restart the database
 `sudo service postgresql start`
+
+
+Check indexes:
+```
+SELECT tablename, indexname, indexdef
+FROM pg_indexes WHERE schemaname = 'public'
+ORDER BY tablename, indexname;
+```
 
 ## Clearing cache for benchmarking
 

@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # make a handler that exports to a file
-handler = logging.FileHandler('benchmarks.log')
+handler = logging.FileHandler('benchmarks'+datetime.now().strftime("_%Y%m%d_%H%M%S")+'.log')
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(message)s')
 handler.setFormatter(formatter)

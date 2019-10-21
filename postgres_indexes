@@ -1,3 +1,4 @@
+
 tablename  |         indexname          |                                               indexdef
 -------------+----------------------------+------------------------------------------------------------------------------------------------------
 authors     | authors_pkey               | CREATE UNIQUE INDEX authors_pkey ON public.authors USING btree (id)
