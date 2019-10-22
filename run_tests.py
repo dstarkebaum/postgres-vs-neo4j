@@ -63,9 +63,9 @@ def main():
     logger.info('Database '+args.database+', size: '+args.size+', repeats: '+str(args.repeat))
 
     if 'both'==args.database or 'postgres'==args.database:
-        if test >= 0:
-            logger.info('Starting test: '+bench.tests[test]['desc'])
-            post = bench.run_test('postgres', args.size, test, repeats=args.repeat)
+        if args.test >= 0:
+            logger.info('Starting test: '+bench.tests[args.test]['desc'])
+            post = bench.run_test('postgres', args.size, args.test, repeats=args.repeat)
             for r in post[0]['results']:
                 logger.info(r)
             return
@@ -78,9 +78,9 @@ def main():
         return
 
     if 'both'==args.database or 'neo4j'==args.database:
-        if test >= 0:
-            logger.info('Starting test: '+bench.tests[test]['desc'])
-            post = bench.run_test('postgres', args.size, test, repeats=args.repeat)
+        if args.test >= 0:
+            logger.info('Starting test: '+bench.tests[args.test]['desc'])
+            post = bench.run_test('postgres', args.size, args.test, repeats=args.repeat)
             for r in post[0]['results']:
                 logger.info(r)
             return
