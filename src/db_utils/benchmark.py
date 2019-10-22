@@ -51,7 +51,7 @@ LIMIT 10;
 
         'neo4j':'''
 MATCH (p:Paper)
-WHERE p.title =~ '.*'%Preferred reporting items for systematic reviews%'.*'
+WHERE p.title =~ '.*Preferred reporting items for systematic reviews.*'
 RETURN p.title, p.id
 LIMIT 10;
                 ''',
