@@ -102,7 +102,7 @@ WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
                 ''',
 
         },{
-        'desc':'Find the titles and ids of all papers that cite a paper with id 'x'',
+        'desc':"Find the titles and ids of all papers that cite a paper with id 'x'",
 
 
         'neo4j':'''
@@ -149,7 +149,7 @@ ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
 #            ''',
 
         },{
-        'desc':'Find the names, ids, and paper counts of the top ten authors who have published the most paper',
+        'desc':"Find the names, ids, and paper counts of the top ten authors who have published the most paper",
 
 
         'neo4j':'''
@@ -168,7 +168,7 @@ ORDER BY count(has_author.paper_id) DESC LIMIT 10;
             ''',
 
         },{
-        'desc':'Find the names, ids, and citation counts of the top ten authors whose papers have the most direct citations',
+        'desc':"Find the names, ids, and citation counts of the top ten authors whose papers have the most direct citations",
 
 
         'neo4j':'''
