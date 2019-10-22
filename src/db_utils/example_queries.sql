@@ -207,6 +207,16 @@ FROM
    subordinates;
 
 
+select * from papers p
+where (
+  select count(*) from paper q
+  where p.id = q.id
+) > 1;
+
+CREATE TABLE unique_authors AS
+SELECT id, min(name) FROM authors
+GROUP BY id;
+
 #========================== Cypher ================================
 
 

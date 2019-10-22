@@ -109,3 +109,27 @@ sudo nano /etc/neo4j/neo4j.conf;
 dbms.memory.heap.initial_size=11600m
 dbms.memory.heap.max_size=11600m
 dbms.memory.pagecache.size=11900m
+
+
+
+
+
+
+
+
+
+
+postgres large
+310GB = 324115304
+shared_buffers = 7.7GB
+effective_cache_size = 23GB
+
+postgres medium
+163GB = 170126904
+shared_buffers = 7.7GB
+effective_cache_size = 23GB
+
+postgres small
+25GB = 25624876
+shared_buffers = 1.8GB
+effective_cache_size = 5.4GB

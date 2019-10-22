@@ -11,6 +11,12 @@ from . import dash_app
 app = dash_app.app
 
 tests = benchmark.tests
+db_sizes = {
+    'local':'200 papers',
+    'small':'11 million papers',
+    'medium':'51 million papers',
+    'large':'176 million papers',
+    }
 
 def make_layout():
     return html.Div(children=[
@@ -23,7 +29,7 @@ def make_layout():
                     #options=[{'label': '', 'value': ''}],
                     multi=False,
                     placeholder='Database Size...',
-                    options=[{'label': key, 'value': key} for key in credentials.postgres],
+                    options=[{'label': key + ": "+db_sizes[key], 'value': key} for key in credentials.postgres],
                     value=next(iter(credentials.postgres)),
                     #style={'width': '99%'},
                 ),
@@ -58,6 +64,7 @@ def make_layout():
 #                      ===========Results graph=============
         dcc.Graph(
             id='results_graph',
+            style={"height" : "30%", "width" : "100%"},
             #figure={
             #    'data': [{},{}],
                 #'layout': {
@@ -139,7 +146,7 @@ def update_graph(db_size, test_number):
             ]
 
     return [{'data': trace, 'layout':go.Layout(
-            title="Test results", colorway=['#fdae61', '#abd9e9', '#2c7bb6'],
+            title="Postgres-vs-Neo4j", colorway=['#fdae61', '#abd9e9', '#2c7bb6'],
             yaxis={"title": "Execution time (s)"}, xaxis={"title": "Iteration"}
             ),},
 

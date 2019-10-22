@@ -159,6 +159,9 @@ create extension pg_trgm;
 logfile on Ubuntu
 `less /var/log/postgresql/postgresql-10-main.log`
 
+Calculate the size of the database:
+`sudo du -sh /var/lib/postgresql/10/main`
+
 Making a database backup:
 https://www.postgresql.org/docs/10/backup-file.html
 

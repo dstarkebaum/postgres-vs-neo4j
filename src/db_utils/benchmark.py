@@ -28,8 +28,8 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
     logger.critical("Unhandled exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 tests = [
-        {
-        'desc':"Find names and ids of the first 10 authors with names like 'x'",
+        {#0
+        'desc':"Search for authors by name",
 
         'neo4j':'''
 MATCH (a:Author)
@@ -45,8 +45,8 @@ LIMIT 10;
                 ''',
 
 
-        },{
-        'desc':"Find titles and ids of the first 10 papers with titles like 'x'",
+        },{#1
+        'desc':"Search for papers by title",
 
 
         'neo4j':'''
@@ -61,8 +61,8 @@ WHERE title ILIKE '%Preferred reporting items for systematic reviews%'
 LIMIT 10;
                 ''',
 
-        },{
-        'desc':"Count all papers by an author with id 'x'",
+        },{#2
+        'desc':"Count all papers by author.id",
 
         'neo4j':'''
 MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
@@ -75,8 +75,8 @@ FROM has_author
 WHERE has_author.author_id = 144117798;
                 ''',
 
-        },{
-        'desc':"Find the titles and ids of the first 10 papers by an author with id 'x'",
+        },{#3
+        'desc':"Find the first 10 papers by an author",
 
 
         'neo4j':'''
@@ -93,8 +93,8 @@ JOIN has_author ON
 WHERE has_author.author_id = 144117798
 LIMIT 10;
                 ''',
-        },{
-        'desc':"Count all papers that cite a paper with id 'x'",
+        },{#4
+        'desc':"Count all papers that cite a paper",
 
         'neo4j':'''
 MATCH (citing:Paper)-[:CITES]->(cited:Paper)
@@ -107,8 +107,8 @@ FROM is_cited_by
 WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
                 ''',
 
-        },{
-        'desc':"Find the titles and ids of the first 10 papers that cite a paper with id 'x'",
+        },{#5
+        'desc':"Find the first 10 papers that cite a paper",
 
 
         'neo4j':'''
@@ -128,8 +128,8 @@ WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622
 LIMIT 10;
                 ''',
 
-        },{
-        'desc':"Find the titles, ids, and citation count of the top 10 most cited papers",
+        },{#6
+        'desc':"Find the top 10 most cited papers",
 
 
         'neo4j':'''
@@ -158,8 +158,8 @@ LIMIT 10;
 #LIMIT 10;
 #            ''',
 
-        },{
-        'desc':"Find the names, ids, and paper counts of the top ten authors who have published the most papers",
+        },{#7
+        'desc':"Find the top ten authors who have published the most papers",
 
 
         'neo4j':'''
@@ -179,8 +179,8 @@ ORDER BY count(has_author.paper_id) DESC
 LIMIT 10;
             ''',
 
-        },{
-        'desc':"Find the names, ids, and citation counts of the top ten authors whose papers have the most direct citations",
+        },{#8
+        'desc':"Find the top ten authors whose papers have the most citations",
 
 
         'neo4j':'''

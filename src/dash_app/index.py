@@ -12,17 +12,28 @@ import dash.dependencies as dep
 
 app = dash_app.app
 server = app.server
+tab_height = 30
 
 app.layout = html.Div([
-    html.H1(
-        children = 'Postgres-vs-Neo4j',
-        style = {'textAlign': 'center'},
-    ),
+    #html.H2(
+    #    children = 'Postgres-vs-Neo4j',
+    #    style = {'textAlign': 'center'},
+    #),
     dcc.Tabs(
         id = 'main-tab',
         children=[
-            dcc.Tab(label = 'Database Stats', value = 'stats-tab'),
-            dcc.Tab(label = 'Live Search', value = 'search-tab'),
+            dcc.Tab(
+                label = 'Database Stats',
+                value = 'stats-tab',
+                style={'padding': '0','line-height': tab_height},
+                selected_style={'padding': '0','line-height': tab_height},
+                ),
+            dcc.Tab(
+                label = 'Live Search',
+                value = 'search-tab',
+                style={'padding': '0','line-height': tab_height},
+                selected_style={'padding': '0','line-height': tab_height},
+                ),
         ],
         value = 'stats-tab',
     ),
