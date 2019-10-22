@@ -35,6 +35,9 @@ def parse_args():
             help='Which database engine to use: postgres, neo4j, both')
     parser.add_argument('--size',type=str,default='local',
             help='Which database size to use: local, small, medium, or large')
+    parser.add_argument('--test',type=int,default=-1,
+            help='Which test to run. Default runs all tests')
+
 
     return parser.parse_args()
 
@@ -60,19 +63,33 @@ def main():
     logger.info('Database '+args.database+', size: '+args.size+', repeats: '+str(args.repeat))
 
     if 'both'==args.database or 'postgres'==args.database:
+        if test >= 0:
+            logger.info('Starting test: '+bench.tests[test]['desc'])
+            post = bench.run_test('postgres', args.size, test, repeats=args.repeat)
+            for r in post[0]['results']:
+                logger.info(r)
+            return
+
         for i in range(len(bench.tests)):
             logger.info('Starting test: '+bench.tests[i]['desc'])
             post = bench.run_test('postgres', args.size, i, repeats=args.repeat)
             for r in post[0]['results']:
                 logger.info(r)
+        return
 
     if 'both'==args.database or 'neo4j'==args.database:
+        if test >= 0:
+            logger.info('Starting test: '+bench.tests[test]['desc'])
+            post = bench.run_test('postgres', args.size, test, repeats=args.repeat)
+            for r in post[0]['results']:
+                logger.info(r)
+            return
+
         for i in range(len(bench.tests)):
             logger.info('Starting test: '+bench.tests[i]['desc'])
             neo = bench.run_test('neo4j', args.size, i, repeats=args.repeat)
             for r in neo[0]['results']:
                 logger.info(r)
-
 
 
 
