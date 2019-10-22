@@ -29,32 +29,36 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
 
 tests = [
         {
-        'desc':"Find names and ids of authors with names like 'x'",
+        'desc':"Find names and ids of the first 10 authors with names like 'x'",
 
         'neo4j':'''
 MATCH (a:Author)
 WHERE a.name =~ '.*Altman.*'
 RETURN a.name, a.id;
+LIMIT 10;
                 ''',
         'post':'''
 SELECT name, id
 FROM authors
-WHERE name ILIKE '%Altman%';
+WHERE name ILIKE '%Altman%'
+LIMIT 10;
                 ''',
 
 
         },{
-        'desc':"Find titles and ids of papers with titles like 'x'",
+        'desc':"Find titles and ids of the first 10 papers with titles like 'x'",
 
 
         'neo4j':'''
 MATCH (p:Paper)
 WHERE p.title =~ '.*'%Preferred reporting items for systematic reviews%'.*'
-RETURN p.title, p.id;
+RETURN p.title, p.id
+LIMIT 10;
                 ''',
         'post':'''
 SELECT title, id FROM papers
-WHERE title ilike '%Preferred reporting items for systematic reviews%';
+WHERE title ILIKE '%Preferred reporting items for systematic reviews%'
+LIMIT 10;
                 ''',
 
         },{
@@ -72,20 +76,22 @@ WHERE has_author.author_id = 144117798;
                 ''',
 
         },{
-        'desc':"Find the titles and ids of all papers by an author with id 'x'",
+        'desc':"Find the titles and ids of the first 10 papers by an author with id 'x'",
 
 
         'neo4j':'''
 MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
 WHERE a.id = "144117798"
-RETURN p.title, p.id;
+RETURN p.title, p.id
+LIMIT 10;
                 ''',
         'post':'''
 SELECT papers.title, papers.id
 FROM papers
 JOIN has_author ON
   has_author.paper_id = papers.id
-WHERE has_author.author_id = 144117798;
+WHERE has_author.author_id = 144117798
+LIMIT 10;
                 ''',
         },{
         'desc':"Count all papers that cite a paper with id 'x'",
@@ -102,13 +108,14 @@ WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
                 ''',
 
         },{
-        'desc':"Find the titles and ids of all papers that cite a paper with id 'x'",
+        'desc':"Find the titles and ids of the first 10 papers that cite a paper with id 'x'",
 
 
         'neo4j':'''
 MATCH (citing:Paper)-[:CITES]->(cited:Paper)
 WHERE cited.id = "fbb11a841893d4b68fa2173226285ded4f7b04d6"
-RETURN citing.title, citing.id;
+RETURN citing.title, citing.id
+LIMIT 10;
                 ''',
         # note: hex(1436906225246299354080717389136457570294446097622)
         # is fbb11a841893d4b68fa2173226285ded4f7b04d6
@@ -117,17 +124,19 @@ SELECT papers.title, papers.id
 FROM papers
 JOIN is_cited_by ON
   papers.id = is_cited_by.incit_id
-WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
+WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622
+LIMIT 10;
                 ''',
 
         },{
-        'desc':"Find the titles, ids, and citation count of the top ten most cited papers",
+        'desc':"Find the titles, ids, and citation count of the top 10 most cited papers",
 
 
         'neo4j':'''
 MATCH (:Paper)-[r:CITES]->(p:Paper)
 RETURN p.title, p.id, COUNT(r)
-ORDER BY COUNT(r) DESC LIMIT 10;
+ORDER BY COUNT(r) DESC
+LIMIT 10;
             ''',
 
         'post':'''
@@ -136,7 +145,8 @@ FROM papers
 JOIN is_cited_by ON
   papers.id = is_cited_by.id
 GROUP BY papers.id
-ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
+ORDER BY count(is_cited_by.incit_id) DESC
+LIMIT 10;
               ''',
 #        },{
 #        'desc':'Top ten papers with most citations of citations of citations...',
@@ -149,7 +159,7 @@ ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
 #            ''',
 
         },{
-        'desc':"Find the names, ids, and paper counts of the top ten authors who have published the most paper",
+        'desc':"Find the names, ids, and paper counts of the top ten authors who have published the most papers",
 
 
         'neo4j':'''
