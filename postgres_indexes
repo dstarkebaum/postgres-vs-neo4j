@@ -1,3 +1,9 @@
+# Get database size on disk:
+sudo du -s /var/lib/postgresql/10/*
+
+Postgres-small
+25624852 = 25G
+
 
 tablename  |         indexname          |                                               indexdef
 -------------+----------------------------+------------------------------------------------------------------------------------------------------

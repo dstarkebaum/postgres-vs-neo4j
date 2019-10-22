@@ -29,43 +29,163 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
 
 tests = [
         {
-        'desc':'Top ten authors with the most papers',
+        'desc':"Find names and ids of authors with names like 'x'",
+
+        'neo4j':'''
+MATCH (a:Author)
+WHERE a.name =~ '.*Altman.*'
+RETURN a.name, a.id;
+                ''',
+        'post':'''
+SELECT name, id
+FROM authors
+WHERE name ILIKE '%Altman%';
+                ''',
+
+
+        },{
+        'desc':"Find titles and ids of papers with titles like 'x'",
+
+
+        'neo4j':'''
+MATCH (p:Paper)
+WHERE p.title =~ '.*'%Preferred reporting items for systematic reviews%'.*'
+RETURN p.title, p.id;
+                ''',
+        'post':'''
+SELECT title, id FROM papers
+WHERE title ilike '%Preferred reporting items for systematic reviews%';
+                ''',
+
+        },{
+        'desc':"Count all papers by an author with id 'x'",
+
+        'neo4j':'''
+MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
+WHERE a.id = "144117798"
+RETURN count(p);
+                ''',
+        'post':'''
+SELECT count(paper_id)
+FROM has_author
+WHERE has_author.author_id = 144117798;
+                ''',
+
+        },{
+        'desc':"Find the titles and ids of all papers by an author with id 'x'",
+
+
+        'neo4j':'''
+MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
+WHERE a.id = "144117798"
+RETURN p.title, p.id;
+                ''',
+        'post':'''
+SELECT papers.title, papers.id
+FROM papers
+JOIN has_author ON
+  has_author.paper_id = papers.id
+WHERE has_author.author_id = 144117798;
+                ''',
+        },{
+        'desc':"Count all papers that cite a paper with id 'x'",
+
+        'neo4j':'''
+MATCH (citing:Paper)-[:CITES]->(cited:Paper)
+WHERE cited.id = "fbb11a841893d4b68fa2173226285ded4f7b04d6"
+RETURN count(citing);
+                ''',
+        'post':'''
+SELECT count(incit_id)
+FROM is_cited_by
+WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
+                ''',
+
+        },{
+        'desc':'Find the titles and ids of all papers that cite a paper with id 'x'',
+
+
+        'neo4j':'''
+MATCH (citing:Paper)-[:CITES]->(cited:Paper)
+WHERE cited.id = "fbb11a841893d4b68fa2173226285ded4f7b04d6"
+RETURN citing.title, citing.id;
+                ''',
+        # note: hex(1436906225246299354080717389136457570294446097622)
+        # is fbb11a841893d4b68fa2173226285ded4f7b04d6
+        'post':'''
+SELECT papers.title, papers.id
+FROM papers
+JOIN is_cited_by ON
+  papers.id = is_cited_by.incit_id
+WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
+                ''',
+
+        },{
+        'desc':"Find the titles, ids, and citation count of the top ten most cited papers",
+
+
+        'neo4j':'''
+MATCH (:Paper)-[r:CITES]->(p:Paper)
+RETURN p.title, p.id, COUNT(r)
+ORDER BY COUNT(r) DESC LIMIT 10;
+            ''',
+
+        'post':'''
+SELECT papers.title, papers.id, count(is_cited_by.incit_id)
+FROM papers
+JOIN is_cited_by ON
+  papers.id = is_cited_by.id
+GROUP BY papers.id
+ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
+              ''',
+#        },{
+#        'desc':'Top ten papers with most citations of citations of citations...',
+#
+#        'neo4j':'''
+#MATCH (:Paper)-[r:CITES *1..]->(p:Paper)
+#RETURN p.title, COUNT(r)
+#ORDER BY COUNT(r) DESC
+#LIMIT 10;
+#            ''',
+
+        },{
+        'desc':'Find the names, ids, and paper counts of the top ten authors who have published the most paper',
+
 
         'neo4j':'''
 MATCH (:Paper)-[r:HAS_AUTHOR]->(a:Author)
-RETURN a.name,COUNT(r)
+RETURN a.name, a.id, COUNT(r)
 ORDER BY COUNT(r) DESC LIMIT 10;
             ''',
 
         'post':'''
-SELECT authors.name, count(*) FROM
-authors LEFT JOIN (
-    has_author LEFT JOIN is_cited_by
-    ON is_cited_by.id = has_author.paper_id
-) ON authors.id = has_author.author_id
-GROUP BY authors.name
-ORDER BY count(*) DESC LIMIT 10;
+SELECT authors.name, authors.id, count(has_author.paper_id)
+FROM authors
+JOIN has_author ON
+  authors.id = has_author.author_id
+GROUP BY authors.id
+ORDER BY count(has_author.paper_id) DESC LIMIT 10;
             ''',
+
         },{
-        'desc':'Top ten authors whose papers have the most direct citations',
+        'desc':'Find the names, ids, and citation counts of the top ten authors whose papers have the most direct citations',
+
 
         'neo4j':'''
 MATCH (:Paper)-[r:CITES]-(:Paper)-[HAS_AUTHOR]-(a:Author)
-RETURN a.name, COUNT(r)
+RETURN a.name, a.id, COUNT(r)
 ORDER BY COUNT(r) DESC LIMIT 10;
             ''',
 
         'post':'''
-SELECT authors.name, count(*)
-    FROM authors
-    JOIN has_author ON
-        authors.id = has_author.author_id
-    JOIN is_cited_by AS authorsPapers ON
-        has_author.paper_id = authorsPapers.id
-    JOIN is_cited_by AS citingPapers ON
-        authorsPapers.id = citingPapers.incit_id
-GROUP BY authors.name
-ORDER BY count(*) DESC LIMIT 10;
+SELECT authors.name, authors.id, count(is_cited_by.incit_id)
+FROM authors
+JOIN has_author ON
+  authors.id = has_author.author_id
+JOIN is_cited_by ON
+  has_author.paper_id = is_cited_by.id
+GROUP BY authors.id
+ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
             ''',
 #        },{
 #        'desc':'Top ten authors whose papers have the most citations of citations...',
@@ -73,30 +193,6 @@ ORDER BY count(*) DESC LIMIT 10;
 #        'neo4j':'''
 #MATCH (:Paper)-[r:CITES *1..]->(:Paper)-[:HAS_AUTHOR]->(a:Author)
 #RETURN a.name, COUNT(r)
-#ORDER BY COUNT(r) DESC
-#LIMIT 10;
-#            ''',
-        },{
-        'desc':'Top ten most cited papers',
-
-        'neo4j':'''
-MATCH (:Paper)-[r:CITES]->(p:Paper)
-RETURN p.title, COUNT(r)
-ORDER BY COUNT(r) DESC LIMIT 10;
-            ''',
-
-        'post':'''
-SELECT papers.title, count(*) FROM
-papers INNER JOIN is_cited_by ON papers.id = is_cited_by.id
-GROUP BY papers.title
-ORDER BY count(*) DESC LIMIT 10;
-            ''',
-#        },{
-#        'desc':'Top ten papers with most citations of citations of citations...',
-#
-#        'neo4j':'''
-#MATCH (:Paper)-[r:CITES *1..]->(p:Paper)
-#RETURN p.title, COUNT(r)
 #ORDER BY COUNT(r) DESC
 #LIMIT 10;
 #            ''',

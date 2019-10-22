@@ -1,28 +1,3 @@
-
-# Find an author with a name similar to "x"
-SELECT name, id FROM authors WHERE name ILIKE '%ozek%';
-
-# possible alternative?
-SELECT 1
-WHERE to_tsvector('simple', 'Ozek') @@ to_tsquery('english', 'yor');
-
-
-# Find papers by an author with id "x"
-SELECT papers.title, papers.id FROM papers, (
-    SELECT paper_id FROM has_author
-    WHERE has_author.author_id = 5160022
-) AS z
-WHERE papers.id = z.paper_id;
-
-
-# Find all papers that cite a paper with id "x"
-SELECT papers.title, papers.id FROM papers, (
-    select incit_id from is_cited_by
-    where is_cited_by.id = 1096691340917389300651417525314313012981369689808
-) as citations
-where papers.id = citations.incit_id;
-
-
 # How many papers are there in the dataset?
 select count(*) from papers
 49000200
@@ -43,22 +18,120 @@ select count(*) from is_cited_by;
 select count(*) from papers inner join is_cited_by on papers.id = is_cited_by.incit_id;
 42849667
 
+
+
+# Find an author with a name similar to 'x'
+SELECT name, id FROM authors WHERE name ILIKE '%Altman%';
+
+# Find a paper with a title similar to 'x'
+SELECT title, id FROM papers
+WHERE title ilike '%Preferred reporting items for systematic reviews%';
+
+#id = 1436906225246299354080717389136457570294446097622
+
+# possible alternative?
+SELECT 1
+WHERE to_tsvector('simple', 'Ozek') @@ to_tsquery('english', 'yor');
+
+
+# Most Cited Author in small database:
+# name: Douglas G. Altman, id: 144117798
+
+
+# Count all papers by an author with id "a"
+SELECT count(paper_id)
+FROM has_author
+WHERE has_author.author_id = 144117798;
+
+# Find papers by an author with id "a"
+SELECT papers.title, papers.id FROM papers, (
+    SELECT paper_id FROM has_author
+    WHERE has_author.author_id = 5160022
+) AS z
+WHERE papers.id = z.paper_id;
+
+# Find the titles and ids of all papers by an author with id 'x' using join
+SELECT papers.title, papers.id
+  FROM papers
+  JOIN has_author ON
+    has_author.paper_id = papers.id
+  WHERE has_author.author_id = 144117798;
+
+
+
+# Count all papers that cite a paper with id 'b' using join
+SELECT count(incit_id)
+FROM is_cited_by
+WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
+
+# Find all papers that cite a paper with id "x"
+SELECT papers.title, papers.id FROM papers, (
+    select incit_id from is_cited_by
+    where is_cited_by.id = 1436906225246299354080717389136457570294446097622
+) as citations
+where papers.id = citations.incit_id;
+
+# Find the titles and ids of papers that cite a paper with id 'x' using join
+SELECT papers.title, papers.id
+  FROM papers
+  JOIN is_cited_by ON
+    papers.id = is_cited_by.incit_id
+  WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
+
+
 # what are the top ten most cited papers, and how many citations to they have?
-select papers.title, count(*), papers.id from
-papers inner join cites on papers.id = cites.id
-group by papers.id order by count(*) desc limit 10;
+SELECT papers.title, papers.id, count(is_cited_by.incit_id)
+  FROM papers
+  JOIN is_cited_by ON
+    papers.id = is_cited_by.id
+  GROUP BY papers.id
+  ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
 
+# what are the top ten authors that have published the most papers
+SELECT authors.name, authors.id, count(*)
+    FROM authors
+    JOIN has_author as papersByAuthor ON
+        authors.id = papersByAuthor.author_id
+GROUP BY authors.id
+ORDER BY count(*) DESC LIMIT 10;
 
-SELECT authors.name, count(*)
+# what are the top ten authors that have published the most papers
+SELECT authors.name, authors.id, count(has_author.paper_id)
     FROM authors
     JOIN has_author ON
         authors.id = has_author.author_id
-    JOIN is_cited_by AS authorsPapers ON
-        has_author.paper_id = authorsPapers.id
+GROUP BY authors.id
+ORDER BY count(has_author.paper_id) DESC LIMIT 10;
+
+
+# what are the top ten most cited papers?
+SELECT papers.title, papers.id, count(*)
+    FROM papers
     JOIN is_cited_by AS citingPapers ON
         authorsPapers.id = citingPapers.incit_id
-GROUP BY authors.name
+GROUP BY papers.id
 ORDER BY count(*) DESC LIMIT 10;
+
+
+# what are the top ten most cited authors, and how many citations to they have?
+SELECT authors.name, authors.id, count(*)
+    FROM authors
+    JOIN has_author as papersByAuthor ON
+        authors.id = papersByAuthor.author_id
+    JOIN is_cited_by AS citingPapers ON
+        papersByAuthor.paper_id = citingPapers.id
+GROUP BY authors.id
+ORDER BY count(*) DESC LIMIT 10;
+
+
+SELECT authors.name, authors.id, count(is_cited_by.incit_id)
+    FROM authors
+    JOIN has_author ON
+        authors.id = has_author.author_id
+    JOIN is_cited_by ON
+        has_author.paper_id = is_cited_by.id
+GROUP BY authors.id
+ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
 
 
 # Example recursive query to build a list of numbers from 1 to 5
@@ -95,7 +168,7 @@ WITH RECURSIVE citation_tree AS (
  GROUP BY title ORDER BY count(*) DESC LIMIT 10;
 
 
-# 
+#
  WITH RECURSIVE citation_tree AS (
    SELECT papers.title AS title, is_cited_by.incit_id AS citingID
    FROM papers
@@ -148,6 +221,17 @@ WHERE a.id = "2475639" RETURN p.title,p.id;
 MATCH (p1:Paper)-[:CITES]->(p2:Paper)
 WHERE p2.id = "af05f3bf27641bafd0e49f092a21bd5bc6b1843c" RETURN p1.title,p1.id;
 
+
+# Count all papers by an author with id 'x'
+MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
+WHERE a.id = "144117798"
+RETURN count(p);
+
+
+# Count all papers that cite a paper with id 'x'
+MATCH (citing:Paper)-[:CITES]->(cited:Paper)
+WHERE cited.id = "fbb11a841893d4b68fa2173226285ded4f7b04d6"
+RETURN count(citing);
 
 # Find the top ten papers with most citations
 MATCH (:Paper)-[r:CITES]->(p:Paper)
