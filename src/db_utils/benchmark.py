@@ -34,7 +34,7 @@ tests = [
         'neo4j':'''
 MATCH (a:Author)
 WHERE a.name =~ '.*Altman.*'
-RETURN a.name, a.id;
+RETURN a.name, a.id
 LIMIT 10;
                 ''',
         'post':'''
@@ -165,7 +165,8 @@ LIMIT 10;
         'neo4j':'''
 MATCH (:Paper)-[r:HAS_AUTHOR]->(a:Author)
 RETURN a.name, a.id, COUNT(r)
-ORDER BY COUNT(r) DESC LIMIT 10;
+ORDER BY COUNT(r) DESC
+LIMIT 10;
             ''',
 
         'post':'''
@@ -174,7 +175,8 @@ FROM authors
 JOIN has_author ON
   authors.id = has_author.author_id
 GROUP BY authors.id
-ORDER BY count(has_author.paper_id) DESC LIMIT 10;
+ORDER BY count(has_author.paper_id) DESC
+LIMIT 10;
             ''',
 
         },{
@@ -184,7 +186,8 @@ ORDER BY count(has_author.paper_id) DESC LIMIT 10;
         'neo4j':'''
 MATCH (:Paper)-[r:CITES]-(:Paper)-[HAS_AUTHOR]-(a:Author)
 RETURN a.name, a.id, COUNT(r)
-ORDER BY COUNT(r) DESC LIMIT 10;
+ORDER BY COUNT(r) DESC
+LIMIT 10;
             ''',
 
         'post':'''
@@ -195,7 +198,8 @@ JOIN has_author ON
 JOIN is_cited_by ON
   has_author.paper_id = is_cited_by.id
 GROUP BY authors.id
-ORDER BY count(is_cited_by.incit_id) DESC LIMIT 10;
+ORDER BY count(is_cited_by.incit_id) DESC
+LIMIT 10;
             ''',
 #        },{
 #        'desc':'Top ten authors whose papers have the most citations of citations...',
