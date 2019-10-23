@@ -65,9 +65,9 @@ LIMIT 10;
         'desc':"Count all papers by an author",
 
         'neo4j':'''
-MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
+MATCH (a:Author)
 WHERE a.id = "144117798"
-RETURN count(p);
+RETURN SIZE(()-[:HAS_AUTHOR]->(a));
                 ''',
         'post':'''
 SELECT count(paper_id)
@@ -97,9 +97,9 @@ LIMIT 10;
         'desc':"Count all papers that cite a paper",
 
         'neo4j':'''
-MATCH (citing:Paper)-[:CITES]->(cited:Paper)
+MATCH (cited:Paper)
 WHERE cited.id = "fbb11a841893d4b68fa2173226285ded4f7b04d6"
-RETURN count(citing);
+RETURN SIZE((:Paper)-[:CITES]->(cited));
                 ''',
         'post':'''
 SELECT count(incit_id)
@@ -133,9 +133,9 @@ LIMIT 10;
 
 
         'neo4j':'''
-MATCH (:Paper)-[r:CITES]->(p:Paper)
-RETURN p.title, p.id, COUNT(r)
-ORDER BY COUNT(r) DESC
+MATCH (p:Paper)
+RETURN p.title, p.id, SIZE( ()-[:CITES]->(p) ) AS cite_count
+ORDER BY cite_count DESC
 LIMIT 10;
             ''',
 
@@ -163,9 +163,9 @@ LIMIT 10;
 
 
         'neo4j':'''
-MATCH (:Paper)-[r:HAS_AUTHOR]->(a:Author)
-RETURN a.name, a.id, COUNT(r)
-ORDER BY COUNT(r) DESC
+MATCH (a:Author)
+RETURN a.name, a.id, SIZE(()-[:HAS_AUTHOR]->(a)) as pub_count
+ORDER BY pub_count DESC
 LIMIT 10;
             ''',
 
@@ -179,28 +179,32 @@ ORDER BY count(has_author.paper_id) DESC
 LIMIT 10;
             ''',
 
-        },{#8
-        'desc':"Find which authors have the most citations",
-
-
-        'neo4j':'''
-MATCH (:Paper)-[r:CITES]-(:Paper)-[HAS_AUTHOR]-(a:Author)
-RETURN a.name, a.id, COUNT(r)
-ORDER BY COUNT(r) DESC
-LIMIT 10;
-            ''',
-
-        'post':'''
-SELECT authors.name, authors.id, count(is_cited_by.incit_id)
-FROM authors
-JOIN has_author ON
-  authors.id = has_author.author_id
-JOIN is_cited_by ON
-  has_author.paper_id = is_cited_by.id
-GROUP BY authors.id
-ORDER BY count(is_cited_by.incit_id) DESC
-LIMIT 10;
-            ''',
+#         },{#8
+#         'desc':"Find which authors have the most citations",
+#
+#
+#         'neo4j':'''
+# MATCH (p:Paper)
+# WITH p,SIZE(()-[:CITES]->(p)) AS cite_count
+# MATCH (a:Author)
+# WHERE (p)-[:HAS_AUTHOR]->(a:Author)
+# WITH a,SUM(cite_count) as total_cites
+# RETURN a.name, a.id, total_cites
+# ORDER BY total_cites DESC
+# LIMIT 10;
+#             ''',
+#
+#         'post':'''
+# SELECT authors.name, authors.id, count(is_cited_by.incit_id)
+# FROM authors
+# JOIN has_author ON
+#   authors.id = has_author.author_id
+# JOIN is_cited_by ON
+#   has_author.paper_id = is_cited_by.id
+# GROUP BY authors.id
+# ORDER BY count(is_cited_by.incit_id) DESC
+# LIMIT 10;
+#             ''',
 #        },{
 #        'desc':'Top ten authors whose papers have the most citations of citations...',
 #

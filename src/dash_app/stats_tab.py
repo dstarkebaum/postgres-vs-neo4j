@@ -70,6 +70,7 @@ def make_layout():
         dcc.Graph(
             id='results_graph',
             style={"height" : "30%", "width" : "100%"},
+
             #figure={
             #    'data': [{},{}],
                 #'layout': {
@@ -184,7 +185,7 @@ def update_graph(db_size, warm_or_cold):
 
     return [{'data': trace, 'layout':go.Layout(
             title="Postgres-vs-Neo4j", colorway=['#fdae61', '#abd9e9', '#2c7bb6'],
-            yaxis={"title": "Execution time (s)"}, xaxis={"title": "Test Number"}
+            yaxis={"title": "Execution time (s)", "type": "log"}, xaxis={"title": "Test Number"}
             ),},
 
             ]
