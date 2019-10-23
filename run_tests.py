@@ -80,7 +80,7 @@ def main():
     if 'both'==args.database or 'neo4j'==args.database:
         if args.test >= 0:
             logger.info('Starting test: '+bench.tests[args.test]['desc'])
-            post = bench.run_test('postgres', args.size, args.test, repeats=args.repeat)
+            post = bench.run_test('neo4j', args.size, args.test, repeats=args.repeat)
             for r in post[0]['results']:
                 logger.info(r)
             return
