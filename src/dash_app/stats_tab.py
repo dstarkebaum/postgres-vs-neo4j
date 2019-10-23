@@ -171,7 +171,7 @@ def update_graph(db_size, warm_or_cold):
                     x=list(range(1,len(postgres_times)+1)), y=postgres_times,
                     name='Postgres',# mode='lines',
                     #marker={'size': 8, "opacity": 0.6, "line": {'width': 0.5}},
-                    hovertext = [tests[i]['desc'] for i in range(len(tests))],
+                    hovertext = [str(i)+': '+tests[i]['desc'] for i in range(len(tests))],
                     hoverinfo = 'text'
                     ),
             go.Bar(
