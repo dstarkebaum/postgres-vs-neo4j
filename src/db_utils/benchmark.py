@@ -29,7 +29,7 @@ def handle_unhandled_exception(exc_type, exc_value, exc_traceback):
 
 tests = [
         {#0
-        'desc':"Search for authors by name",
+        'desc':"Search for an author by name",
 
         'neo4j':'''
 MATCH (a:Author)
@@ -62,7 +62,7 @@ LIMIT 10;
                 ''',
 
         },{#2
-        'desc':"Count all papers by author.id",
+        'desc':"Count all papers by an author",
 
         'neo4j':'''
 MATCH (p:Paper)-[:HAS_AUTHOR]->(a:Author)
@@ -76,7 +76,7 @@ WHERE has_author.author_id = 144117798;
                 ''',
 
         },{#3
-        'desc':"Find the first 10 papers by an author",
+        'desc':"Find all papers by an author",
 
 
         'neo4j':'''
@@ -108,7 +108,7 @@ WHERE is_cited_by.id = 1436906225246299354080717389136457570294446097622;
                 ''',
 
         },{#5
-        'desc':"Find the first 10 papers that cite a paper",
+        'desc':"Find the all papers that cite a paper",
 
 
         'neo4j':'''
@@ -129,7 +129,7 @@ LIMIT 10;
                 ''',
 
         },{#6
-        'desc':"Find the top 10 most cited papers",
+        'desc':"Find the most cited papers",
 
 
         'neo4j':'''
@@ -159,7 +159,7 @@ LIMIT 10;
 #            ''',
 
         },{#7
-        'desc':"Find the top ten authors who have published the most papers",
+        'desc':"Find which authors have published the most papers",
 
 
         'neo4j':'''
@@ -180,7 +180,7 @@ LIMIT 10;
             ''',
 
         },{#8
-        'desc':"Find the top ten authors whose papers have the most citations",
+        'desc':"Find which authors have the most citations",
 
 
         'neo4j':'''
