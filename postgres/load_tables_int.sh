@@ -39,25 +39,3 @@ do
   rm -r data/csv
   rm -r data/s2-corpus
 done
-
-#papers_csv = r"data/csv/papers.csv"
-#inCit_csv = r"data/csv/inCits.csv"
-#outCit_csv = r"data/csv/outCits.csv"
-#authors_csv = r"data/csv/authors.csv"
-#paper_authors_csv = r"data/csv/paper_authors.csv"
-#author_papers_csv = r"data/csv/author_papers.csv"
-
-#load_csv(papers_csv,'papers',['id','title','year','doi'],cursor)
-#load_csv(inCit_csv,'inCits',['id','inCit_id'],cursor)
-#load_csv(outCit_csv,'outCits',['id','outCit_id'],cursor)
-#load_csv(authors_csv,'temp_authors',['id','name'],cursor)
-#load_csv(paper_authors_csv,'paper_authors',['paper_id','author_id'],cursor)
-
-#psql -c "CREATE TABLE papers (id VARCHAR(40) PRIMARY KEY, title TEXT, year SMALLINT, doi TEXT);"
-#psql -c "CREATE TABLE inCits (id VARCHAR(40),inCit_id VARCHAR(40),PRIMARY KEY (id,inCit_id));"
-#id VARCHAR(40) REFERENCES papers(id),
-#inCit_id VARCHAR(40) REFERENCES papers(id),
-#psql -c "CREATE TABLE outCits (id VARCHAR(40) REFERENCES papers(id),outCit_id VARCHAR(40),PRIMARY KEY (id,outCit_id));"
-#outCit_id VARCHAR(40) REFERENCES papers(id),
-#psql -c "CREATE TABLE temp_authors (ser SERIAL PRIMARY KEY,id INTEGER,name TEXT);"
-#psql -c "CREATE TABLE paper_authors (ser SERIAL PRIMARY KEY,paper_id VARCHAR(40),author_id INTEGER);"
