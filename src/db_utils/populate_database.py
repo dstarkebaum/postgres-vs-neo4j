@@ -79,7 +79,10 @@ def populate_database(
         make_int=False,
         cache=True,
         use_previous=False,
-        database='local'):
+        database='local',
+        s3_bucket='data-atsume-arxiv',
+        s3_path='open-corpus/2019-09-17',
+        ):
 
     logger.info(os.getcwd())
 
@@ -110,6 +113,8 @@ def populate_database(
                 testing=testing,
                 cache=cache,
                 engine=engine,
+                s3_bucket=s3_bucket,
+                s3_path=s3_path,
             )
 
         if not cache and 'neo4j' == engine:
@@ -179,9 +184,13 @@ def download_and_extract_json(
         make_int=False,
         testing=True,
         cache=True,
-        engine='neo4j'):
+        engine='neo4j',
+        s3_bucket='data-atsume-arxiv',
+        s3_path='open-corpus/2019-09-17',
+        ):
 
-    json_s3 = 'open-corpus/2019-09-17/{prefix}-{num}.gz'.format(
+    json_s3 = '{path}/{prefix}-{num}.gz'.format(
+            path=s3_path,
             prefix=prefix,
             num=str(file_num).zfill(3)
             )
@@ -192,7 +201,7 @@ def download_and_extract_json(
             num=str(file_num).zfill(3)
             )
 
-    download_from_s3(json_s3, json_local)
+    download_from_s3(json_s3, json_local,bucket=s3_bucket)
 
     use_admin_headers = False
     if 'neo4j-admin' == engine:
@@ -214,7 +223,7 @@ def download_and_extract_json(
 
 
 # Download a single zipped json from S3
-def download_from_s3(source, destination):
+def download_from_s3(source, destination, bucket='data-atsume-arxiv'):
 
     if os.path.exists(destination):
         logger.info(destination + ' already exists')
@@ -223,7 +232,6 @@ def download_from_s3(source, destination):
         logger.info('Downloading from '+ source + ' to ' + destination)
         ensure_dir(destination)
         s3 = boto3.client('s3')
-        bucket = 'data-atsume-arxiv'
         s3.download_file(bucket, source, destination)
         logger.info('Completed download in ' + str(time.perf_counter()-start_time)+'s')
 

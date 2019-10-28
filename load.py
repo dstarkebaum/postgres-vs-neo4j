@@ -11,6 +11,10 @@ username = os.path.split(os.path.expanduser('~'))[-1]
 def parse_args():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--s3_bucket',type=str,default='data-atsume-arxiv',
+            help='The name of the S3 bucket where your JSON files are stored')
+    parser.add_argument('--s3_path',type=str,default='open-corpus/2019-09-17',
+            help='The subdirectory within your S3 bucket where the JSON files are stored')
     parser.add_argument('--corpus_path',type=str,default='data/s2-corpus',
             help='Directory to store the json corpus')
     parser.add_argument('--csv_path',type=str,default='data/csv',
@@ -97,6 +101,7 @@ def main():
                 testing=False,
                 cache=True,
                 )
+
     elif args.easy == 'make-post':
 
         pop.populate_database(
@@ -110,23 +115,35 @@ def main():
                 testing=False,
                 database='local'
                 )
-
         pgu.create_all_indexes(database='local')
         pgu.cleanup_database(database='local')
+
     elif args.easy == 'clean-post':
         pgu.create_all_indexes(database='local')
         pgu.cleanup_database(database='local')
     else:
+        # use all provided parameters
         pop.populate_database(
-            args.corpus_path,
-            args.csv_path,
-            args.prefix,
-            args.suffix,
-            args.start,
-            args.end,
-            args.compress,
-            args.engine
-    )
+            corpus_path=args.corpus_path,
+            csv_path=args.csv_path,
+            prefix=args.prefix,
+            suffix=args.suffix,
+            start=args.start,
+            end=args.end,
+            compress=args.compress,
+            engine=args.engine,
+            make_int=args.make_int,
+            cache=args.cache,
+            use_previous=args.use_previous,
+            database='local',
+            s3_bucket=args.s3_bucket,
+            s3_path=args.s3_path,
+            )
+            
+        if 'postgres' == args.engine or 'psql' == args.engine:
+            pgu.create_all_indexes(database='local')
+            pgu.cleanup_database(database='local')
+
 
 
 
